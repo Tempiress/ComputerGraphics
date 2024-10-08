@@ -1,0 +1,11 @@
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\bin\Debug\GrehemAlgorithm.exe.config
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\bin\Debug\GrehemAlgorithm.exe
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\bin\Debug\GrehemAlgorithm.pdb
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.csproj.AssemblyReference.cache
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.csproj.SuggestedBindingRedirects.cache
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.Form1.resources
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.Properties.Resources.resources
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.csproj.GenerateResource.cache
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.csproj.CoreCompileInputs.cache
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.exe
+D:\Programming2024\Computer Graphics\GrehemAlgorithm\obj\Debug\GrehemAlgorithm.pdb
