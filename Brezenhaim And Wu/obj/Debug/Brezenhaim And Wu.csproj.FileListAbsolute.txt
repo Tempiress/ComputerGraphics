@@ -1,0 +1,11 @@
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\bin\Debug\Brezenhaim And Wu.exe.config
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\bin\Debug\Brezenhaim And Wu.exe
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\bin\Debug\Brezenhaim And Wu.pdb
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.csproj.AssemblyReference.cache
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.csproj.SuggestedBindingRedirects.cache
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim_And_Wu.Form1.resources
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim_And_Wu.Properties.Resources.resources
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.csproj.GenerateResource.cache
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.csproj.CoreCompileInputs.cache
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.exe
+D:\Programming2024\Computer Graphics\Brezenhaim And Wu\obj\Debug\Brezenhaim And Wu.pdb
