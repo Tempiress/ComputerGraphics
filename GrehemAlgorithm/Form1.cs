@@ -50,5 +50,40 @@ namespace GrehemAlgorithm
             }
 
         }
+
+        private double rotate(Point A, Point B, Point C)
+        {
+            return (B.X - A.X) * (C.Y - B.Y) - (B.Y - A.Y) * (C.X - B.X);
+        }
+
+        private void Grahamscan(List<Point> pnts)
+        {
+
+            int n = pnts.Count;
+            List<int> P = new List<int>(n);
+            for (int x = 0; x < n; n++)
+                P.Add(x);
+
+            for (int i = 0; i < n; i++)
+            {
+
+                if (pnts[P[i]].X < pnts[P[0]].X)
+                {
+                    (P[i], P[0]) = (P[i], P[i]); //Меняем местами номера строк 
+                }
+            }
+
+            for (int j = 1; j < n; j++)
+            {
+                int k = j;
+
+                while (k > 1 && (rotate(pnts[P[0]], pnts[P[k - 1]], pnts[P[k]]) < 0))
+                {
+                    (P[k], P[k - 1]) = (P[k - 1], P[k]);
+                    j -= 1;
+                }
+            }
+        }
+
     }
 }
