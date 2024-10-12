@@ -1,0 +1,11 @@
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.csproj.AssemblyReference.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.csproj.SuggestedBindingRedirects.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint_displacement.Form1.resources
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint_displacement.Properties.Resources.resources
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.csproj.GenerateResource.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.csproj.CoreCompileInputs.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\bin\Debug\midpoint displacement.exe.config
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\bin\Debug\midpoint displacement.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\bin\Debug\midpoint displacement.pdb
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\midpoint displacement\midpoint displacement\obj\Debug\midpoint displacement.pdb
