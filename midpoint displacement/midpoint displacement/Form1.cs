@@ -16,7 +16,11 @@ namespace midpoint_displacement
         Point p;
         List<Point> polygonPoints = new List<Point>();
         Queue<Tuple<Point, int>> pointQueue = new Queue<Tuple<Point, int>>();
-        
+        double roughness;
+        double hX;
+        double hY;
+        List<Point> initPoints = new List<Point>();
+
         public Form1()
         {
             InitializeComponent();
@@ -46,14 +50,28 @@ namespace midpoint_displacement
         private void midpointAlg() 
         {   
             var rand = new Random();
-            double roughness = 0.3;
+            roughness = 0.1;
+            Tuple<Point, int> curT = pointQueue.Dequeue();
 
-            double hX = (polygonPoints[0].X + polygonPoints[1].X) / 2;
-            double hY = (polygonPoints[0].Y + polygonPoints[1].Y) / 2;
+            if (curT.Item2 == 1) 
+            {
+                hX = (initPoints[0].X + curT.Item1.X) / 2;
+                hY = (initPoints[0].Y + curT.Item1.Y) / 2;
+            }
+            if (curT.Item2 == 0) 
+            {
+                hX = (initPoints[1].X + curT.Item1.X) / 2;
+                hY = (initPoints[1].Y + curT.Item1.Y) / 2;
+            }
+            
 
             int l = (int)(Math.Sqrt(Math.Pow(polygonPoints[1].X - polygonPoints[0].X, 2) + Math.Pow(polygonPoints[1].Y - polygonPoints[0].Y, 2)));
             double newH = hY - rand.Next((int)(-roughness * l), (int)(roughness * l));
             polygonPoints.Add(new Point((int)hX, (int)newH));
+
+            pointQueue.Enqueue(new Tuple<Point, int>(new Point( (int)hX, (int)newH), 0 ));
+            pointQueue.Enqueue(new Tuple<Point, int>(new Point((int)hX, (int)newH), 1));
+
             polygonPoints.Sort((p1, p2) => 
             {
                 int res = p1.X.CompareTo(p2.X);
@@ -71,7 +89,7 @@ namespace midpoint_displacement
             if (polygonPoints.Count > 1) return;
 
             polygonPoints.Add(e.Location);
-
+            initPoints.Add(e.Location);
             if (polygonPoints.Count == 2)
             {
                 if (polygonPoints[0].X < polygonPoints[1].X)
