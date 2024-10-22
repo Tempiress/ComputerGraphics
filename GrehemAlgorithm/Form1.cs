@@ -13,13 +13,15 @@ namespace GrehemAlgorithm
     public partial class Form1 : Form
     {
         List<Point> points  = new List<Point>();
+        List<Point> hull = new List<Point>(); //Точки выпуклой оболочки
         
         public Form1()
         {
             InitializeComponent();
 
             pictureBox1.MouseClick += drawpoints;
-           
+            pictureBox1.Paint += PictureBox1_Paint;
+
         }
 
 
@@ -27,6 +29,29 @@ namespace GrehemAlgorithm
         {
             
         }
+
+        private void PictureBox1_Paint(object sender, PaintEventArgs e) 
+        {
+            if (points.Count != 0) 
+            {
+                Brush brush = new SolidBrush(Color.Black);
+
+
+                for (int i = 0; i < points.Count; i++)
+                {
+                    e.Graphics.FillRectangle(brush, points[i].X, points[i].Y, 4, 4);
+                }
+
+                if (hull.Count > 1) 
+                {
+                    e.Graphics.DrawPolygon(Pens.Red, hull.ToArray());
+                }
+
+            }
+
+
+        }
+
 
         private void drawpoints(object sender, MouseEventArgs e) 
         {
@@ -56,34 +81,52 @@ namespace GrehemAlgorithm
             return (B.X - A.X) * (C.Y - B.Y) - (B.Y - A.Y) * (C.X - B.X);
         }
 
+        // Сканирование методом Грэхема
         private void Grahamscan(List<Point> pnts)
         {
+            if (pnts.Count < 3) return; // Оболочка невозможна, если точек меньше 3
 
-            int n = pnts.Count;
-            List<int> P = new List<int>(n);
-            for (int x = 0; x < n; n++)
-                P.Add(x);
+            // Находим точку с минимальной координатой Y (если несколько, то с минимальной X)
+            Point minPoint = pnts.Aggregate((min, p) => p.Y < min.Y || (p.Y == min.Y && p.X < min.X) ? p : min);
+            pnts.Remove(minPoint); // Убираем эту точку из списка для сортировки
 
-            for (int i = 0; i < n; i++)
+            // Сортировка точек по полярному углу относительно минимальной точки
+            pnts.Sort((a, b) =>
             {
+                double angle1 = Math.Atan2(a.Y - minPoint.Y, a.X - minPoint.X);
+                double angle2 = Math.Atan2(b.Y - minPoint.Y, b.X - minPoint.X);
+                return angle1.CompareTo(angle2);
+            });
 
-                if (pnts[P[i]].X < pnts[P[0]].X)
+            // Добавляем минимальную точку в выпуклую оболочку и первую отсортированную точку
+            hull.Clear();
+            hull.Add(minPoint);
+            hull.Add(pnts[0]);
+
+            // Строим выпуклую оболочку
+            for (int i = 1; i < pnts.Count; i++)
+            {
+                while (hull.Count >= 2 && rotate(hull[hull.Count - 2], hull[hull.Count - 1], pnts[i]) <= 0)
                 {
-                    (P[i], P[0]) = (P[i], P[i]); //Меняем местами номера строк 
+                    hull.RemoveAt(hull.Count - 1); // Удаляем последнюю точку, если поворот не против часовой
                 }
+                hull.Add(pnts[i]);
             }
 
-            for (int j = 1; j < n; j++)
-            {
-                int k = j;
-
-                while (k > 1 && (rotate(pnts[P[0]], pnts[P[k - 1]], pnts[P[k]]) < 0))
-                {
-                    (P[k], P[k - 1]) = (P[k - 1], P[k]);
-                    j -= 1;
-                }
-            }
+            pictureBox1.Invalidate(); // Перерисовываем с новой оболочкой
         }
 
+
+        // Метод для запуска алгоритма при нажатии кнопки
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (points.Count < 3)
+            {
+                MessageBox.Show("Необходимо добавить как минимум 3 точки.");
+                return;
+            }
+
+            Grahamscan(new List<Point>(points)); // Запуск алгоритма
+        }
     }
 }
