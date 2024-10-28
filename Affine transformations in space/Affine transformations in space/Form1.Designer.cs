@@ -1,4 +1,4 @@
-﻿namespace GrehemAlgorithm
+﻿namespace Affine_transformations_in_space
 {
     partial class Form1
     {
@@ -35,34 +35,30 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.BackColor = System.Drawing.SystemColors.ActiveBorder;
-            this.pictureBox1.Location = new System.Drawing.Point(67, 12);
+            this.pictureBox1.Location = new System.Drawing.Point(173, 65);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(1091, 532);
+            this.pictureBox1.Size = new System.Drawing.Size(1280, 575);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
             // 
             // button1
             // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(527, 550);
+            this.button1.Location = new System.Drawing.Point(705, 673);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(173, 43);
+            this.button1.Size = new System.Drawing.Size(235, 54);
             this.button1.TabIndex = 1;
-            this.button1.Text = "Старт";
+            this.button1.Text = "button1";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1230, 605);
+            this.ClientSize = new System.Drawing.Size(1598, 739);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.pictureBox1);
             this.Name = "Form1";
-            this.Text = "Graham Algorithm";
+            this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 

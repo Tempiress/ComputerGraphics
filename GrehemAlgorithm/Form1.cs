@@ -25,11 +25,6 @@ namespace GrehemAlgorithm
         }
 
 
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            
-        }
-
         private void PictureBox1_Paint(object sender, PaintEventArgs e) 
         {
             if (points.Count != 0) 
@@ -68,12 +63,34 @@ namespace GrehemAlgorithm
                 for (int i = 0; i < points.Count; i++) 
                 {
                     e.Graphics.FillRectangle(brush, points[i].X, points[i].Y, 2, 2);
-                }
-                
-                
+                }                            
                 
             }
 
+        }
+
+        private void SortByPolarAngle(List<Point> points, Point minPoint) 
+        {
+            for (int i = 0; i < points.Count; i++) 
+            {
+                int minIndex = i;
+                double minAngle = Math.Atan2(points[i].Y - minPoint.Y, points[i].X - minPoint.X);
+
+                for (int j = i + 1; j < points.Count; j++) 
+                {
+                    double angle = Math.Atan2(points[j].Y - minPoint.Y, points[j].X - minPoint.X);
+
+                    if (angle < minAngle) 
+                    {
+                        minIndex = j;
+                        minAngle = angle;
+                    }
+                }
+
+                Point temp = points[i];
+                points[i] = points[minIndex];
+                points[minIndex] = temp;
+            }
         }
 
         private double rotate(Point A, Point B, Point C)
@@ -91,12 +108,8 @@ namespace GrehemAlgorithm
             pnts.Remove(minPoint); // Убираем эту точку из списка для сортировки
 
             // Сортировка точек по полярному углу относительно минимальной точки
-            pnts.Sort((a, b) =>
-            {
-                double angle1 = Math.Atan2(a.Y - minPoint.Y, a.X - minPoint.X);
-                double angle2 = Math.Atan2(b.Y - minPoint.Y, b.X - minPoint.X);
-                return angle1.CompareTo(angle2);
-            });
+            SortByPolarAngle(pnts, minPoint);
+
 
             // Добавляем минимальную точку в выпуклую оболочку и первую отсортированную точку
             hull.Clear();
