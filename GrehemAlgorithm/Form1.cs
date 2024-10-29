@@ -13,8 +13,9 @@ namespace GrehemAlgorithm
     public partial class Form1 : Form
     {
         List<Point> points  = new List<Point>();
-        List<Point> hull = new List<Point>(); //Точки выпуклой оболочки
-        
+        List<int> P;
+        List<int> po = new List<int>();
+       
         public Form1()
         {
             InitializeComponent();
@@ -37,10 +38,20 @@ namespace GrehemAlgorithm
                     e.Graphics.FillRectangle(brush, points[i].X, points[i].Y, 4, 4);
                 }
 
-                if (hull.Count > 1) 
+                //if (hull.Count > 1) 
+                //{
+                //    e.Graphics.DrawPolygon(Pens.Red, hull.ToArray());
+                //}
+                if (po.Count > 2) 
                 {
-                    e.Graphics.DrawPolygon(Pens.Red, hull.ToArray());
+                    for (int k = 0; k < po.Count - 1; k++)
+                    {
+                        e.Graphics.DrawLine(Pens.Red, points[po[k]].X, points[po[k]].Y, points[po[k + 1]].X, points[po[k + 1]].Y);
+                    }
+                    e.Graphics.DrawLine(Pens.Red, points[po[0]].X, points[po[0]].Y, points[po[po.Count - 1]].X, points[po[po.Count - 1]].Y);
+                   
                 }
+
 
             }
 
@@ -99,31 +110,43 @@ namespace GrehemAlgorithm
         }
 
         // Сканирование методом Грэхема
-        private void Grahamscan(List<Point> pnts)
+        private void Grahamscan()
         {
-            if (pnts.Count < 3) return; // Оболочка невозможна, если точек меньше 3
+            if (points.Count < 3) return; // Оболочка невозможна, если точек меньше 3
 
-            // Находим точку с минимальной координатой Y (если несколько, то с минимальной X)
-            Point minPoint = pnts.Aggregate((min, p) => p.Y < min.Y || (p.Y == min.Y && p.X < min.X) ? p : min);
-            pnts.Remove(minPoint); // Убираем эту точку из списка для сортировки
+            int n = points.Count;
+            P = Enumerable.Range(0, n).ToList();
 
-            // Сортировка точек по полярному углу относительно минимальной точки
-            SortByPolarAngle(pnts, minPoint);
-
-
-            // Добавляем минимальную точку в выпуклую оболочку и первую отсортированную точку
-            hull.Clear();
-            hull.Add(minPoint);
-            hull.Add(pnts[0]);
-
-            // Строим выпуклую оболочку
-            for (int i = 1; i < pnts.Count; i++)
+            for (int i = 0; i < n; i++) 
             {
-                while (hull.Count >= 2 && rotate(hull[hull.Count - 2], hull[hull.Count - 1], pnts[i]) <= 0)
+                if (points[P[i]].X < points[P[0]].X) 
                 {
-                    hull.RemoveAt(hull.Count - 1); // Удаляем последнюю точку, если поворот не против часовой
+                    (P[i], P[0]) = (P[0], P[i]);
                 }
-                hull.Add(pnts[i]);
+            }
+
+
+            for (int i = 1; i < n; i++) 
+            {
+                int j = i;
+                while (j > 1 && (rotate(points[P[0]], points[P[j - 1]], points[P[j]] ) < 0)) 
+                {
+                    (P[j], P[j - 1]) = (P[j - 1], P[j]);
+                    j -= 1;
+                }
+            }
+            po.Clear();
+            po.Add(P[0]);
+            po.Add(P[1]);
+        
+            for (int q = 1; q < n; q++) 
+            {
+                while (rotate(points[po[po.Count - 2]], points[po[po.Count - 1]], points[P[q]]) < 0) 
+                {
+                    po.RemoveAt(po.Count - 1);
+                }
+                po.Add(P[q]);
+
             }
 
             pictureBox1.Invalidate(); // Перерисовываем с новой оболочкой
@@ -139,7 +162,8 @@ namespace GrehemAlgorithm
                 return;
             }
 
-            Grahamscan(new List<Point>(points)); // Запуск алгоритма
+            Grahamscan(); // Запуск алгоритма
+           
         }
     }
 }

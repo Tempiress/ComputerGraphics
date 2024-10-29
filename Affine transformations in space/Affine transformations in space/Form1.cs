@@ -29,25 +29,41 @@ namespace Affine_transformations_in_space
             }
 
         }
-        class Polygon
+        class polygon
         {
-            public List<Point> Vertices;
+            public List<point> Vertices;
 
-            public Polygon(List<Point> vertices) 
+            public polygon(List<point> vertices) 
             {
                 Vertices = vertices;
             }
         }
-        class Polyhedron 
+        class polyhedron 
         {
-            public List<Point> Verticles;
-            public List<Point> Faces;
+            public List<point> Verticles;
+            public List<point> Faces;
 
-            public Polyhedron(List<Point> verticles, List<Point> faces) 
+            public polyhedron(List<point> verticles, List<point> faces) 
             {
                 Verticles = verticles;
                 Faces = faces;
-            } 
+            }
+
+            public void drawTetraedr() 
+            {
+
+                point v1 = new point(0, 0, 0);
+                point v2 = new point(0, 0, 0);
+                point v3 = new point(0, 0, 0);
+                point v4 = new point(0, 0, 0);
+
+                polygon firstPol =  new polygon(new List<point> {v1, v2, v3 });
+                polygon secondPol = new polygon(new List<point> {v1, v2, v4 });
+                polygon thirdPol = new polygon(new List<point> { });
+                polygon fourthPol;
+
+
+            }
         }
     }
 }
