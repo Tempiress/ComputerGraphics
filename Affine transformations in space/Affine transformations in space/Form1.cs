@@ -13,11 +13,26 @@ namespace Affine_transformations_in_space
 {
     public partial class Form1 : Form
     {
+
+        polyhedron pop;
         public Form1()
         {
             InitializeComponent();
+            
+    
         }
-        class point 
+
+
+        public void DrawTetrahedron()
+        {
+            pop =  polyhedron.drawTetraedr();
+            pictureBox1.Invalidate();
+
+           
+        }
+
+
+        public class point 
         {
             public double X, Y, Z;
 
@@ -29,7 +44,7 @@ namespace Affine_transformations_in_space
             }
 
         }
-        class polygon
+        public class polygon
         {
             public List<point> Vertices;
 
@@ -38,18 +53,20 @@ namespace Affine_transformations_in_space
                 Vertices = vertices;
             }
         }
-        class polyhedron 
+
+
+        public class polyhedron
         {
             public List<point> Verticles;
-            public List<point> Faces;
+            public List<polygon> Faces;
 
-            public polyhedron(List<point> verticles, List<point> faces) 
+            public polyhedron(List<point> verticles , List<polygon> faces)
             {
                 Verticles = verticles;
                 Faces = faces;
             }
 
-            public void drawTetraedr() 
+            public static polyhedron drawTetraedr()
             {
 
                 point v1 = new point(0, 0, 0);
@@ -57,13 +74,27 @@ namespace Affine_transformations_in_space
                 point v3 = new point(0, 0, 0);
                 point v4 = new point(0, 0, 0);
 
-                polygon firstPol =  new polygon(new List<point> {v1, v2, v3 });
-                polygon secondPol = new polygon(new List<point> {v1, v2, v4 });
-                polygon thirdPol = new polygon(new List<point> { });
-                polygon fourthPol;
+                polygon firstPol = new polygon(new List<point> { v1, v2, v3 });
+                polygon secondPol = new polygon(new List<point> { v1, v2, v4 });
+                polygon thirdPol = new polygon(new List<point> {v1, v3, v4 });
+                polygon fourthPol = new polygon(new List<point> {v2, v3, v4 });
 
-
+                return new polyhedron(new List<point> { v1, v2, v3, v4 }, new List<polygon> {firstPol, secondPol, thirdPol, fourthPol });
+                
             }
+        }
+
+
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+            if(pop != null)
+            MessageBox.Show(pop.Faces.Count.ToString());
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            DrawTetrahedron();
         }
     }
 }

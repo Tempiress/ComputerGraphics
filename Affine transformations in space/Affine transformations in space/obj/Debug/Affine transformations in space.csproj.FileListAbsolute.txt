@@ -1,0 +1,11 @@
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\bin\Debug\Affine transformations in space.exe.config
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\bin\Debug\Affine transformations in space.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\bin\Debug\Affine transformations in space.pdb
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.csproj.AssemblyReference.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.csproj.SuggestedBindingRedirects.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine_transformations_in_space.Form1.resources
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine_transformations_in_space.Properties.Resources.resources
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.csproj.GenerateResource.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.csproj.CoreCompileInputs.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Affine transformations in space\Affine transformations in space\obj\Debug\Affine transformations in space.pdb
