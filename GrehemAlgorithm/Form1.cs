@@ -112,41 +112,37 @@ namespace GrehemAlgorithm
         // Сканирование методом Грэхема
         private void Grahamscan()
         {
-            if (points.Count < 3) return; // Оболочка невозможна, если точек меньше 3
+            if (points.Count < 3) return;
 
-            int n = points.Count;
-            P = Enumerable.Range(0, n).ToList();
-
-            for (int i = 0; i < n; i++) 
+            // Находим самую нижнюю точку (если несколько, берем самую левую из них)
+            Point minPoint = points[0];
+            int minIndex = 0;
+            for (int i = 1; i < points.Count; i++)
             {
-                if (points[P[i]].X < points[P[0]].X) 
+                if (points[i].Y < minPoint.Y || (points[i].Y == minPoint.Y && points[i].X < minPoint.X))
                 {
-                    (P[i], P[0]) = (P[0], P[i]);
+                    minPoint = points[i];
+                    minIndex = i;
                 }
             }
+            // Перемещаем самую нижнюю точку на начало списка
+            (points[0], points[minIndex]) = (points[minIndex], points[0]);
 
+            // Сортируем оставшиеся точки по полярному углу относительно `minPoint`
+            SortByPolarAngle(points, minPoint);
 
-            for (int i = 1; i < n; i++) 
-            {
-                int j = i;
-                while (j > 1 && (rotate(points[P[0]], points[P[j - 1]], points[P[j]] ) < 0)) 
-                {
-                    (P[j], P[j - 1]) = (P[j - 1], P[j]);
-                    j -= 1;
-                }
-            }
+            // Построение оболочки
             po.Clear();
-            po.Add(P[0]);
-            po.Add(P[1]);
-        
-            for (int q = 1; q < n; q++) 
+            po.Add(0); // добавляем minPoint в оболочку
+            po.Add(1); // добавляем первую отсортированную точку
+
+            for (int i = 2; i < points.Count; i++)
             {
-                while (rotate(points[po[po.Count - 2]], points[po[po.Count - 1]], points[P[q]]) < 0) 
+                while (po.Count > 1 && rotate(points[po[po.Count - 2]], points[po[po.Count - 1]], points[i]) <= 0)
                 {
                     po.RemoveAt(po.Count - 1);
                 }
-                po.Add(P[q]);
-
+                po.Add(i);
             }
 
             pictureBox1.Invalidate(); // Перерисовываем с новой оболочкой
