@@ -144,9 +144,36 @@ namespace Affine_transformations_in_space
 
         }
 
+        private void multMatr(double[,] changing) 
+        {
+
+            for (int i = 0; i < pop.Faces.Count) 
+            {
+
+            }
+
+
+        }
+
+
+        private void translation(int x, int y, int z)
+        {
+            double[,] translation = new double[,]
+            {
+                {1, 0, 0, 0 },
+                {0, 1, 0, 0 },
+                {0, 0 ,1, 0 },
+                {x, y, z, 1 }
+            };
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             DrawTetrahedron();
+
+
+
+           
         }
     }
 }
