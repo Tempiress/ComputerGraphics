@@ -168,6 +168,19 @@ namespace Affine_transformations_in_space
 
         }
 
+        private void scaleFigure(double dx, double dy, double dz) 
+        {
+
+            double[,] matr = new double[,] {
+                {dx, 0, 0 ,0 },
+                {0, dy, 0, 0 },
+                {0, dz, 0, 0 },
+                {0, 0, 0, 1 }
+            };
+
+            multMatr(matr);
+        }
+
         private void multMatr(double[,] transformationMatrix) 
         {
            
@@ -177,9 +190,9 @@ namespace Affine_transformations_in_space
                 for (int j = 0; j < pop.Faces[i].Vertices.Count; j++) 
                 {
                     var po = pop.Faces[i].Vertices[j];
-                    double newX = po.X * transformationMatrix[0, 0] + po.Y * transformationMatrix[1, 0] + po.Z * transformationMatrix[2, 0] + transformationMatrix[3, 0];
-                    double newY = po.X * transformationMatrix[0, 1] + po.Y * transformationMatrix[1, 1] + po.Z * transformationMatrix[2, 1] + transformationMatrix[3, 1];
-                    double newZ = po.X * transformationMatrix[0, 2] + po.Y * transformationMatrix[1, 2] + po.Z * transformationMatrix[2, 2] + transformationMatrix[3, 2];
+                    double newX =  po.X * transformationMatrix[0, 0] + po.Y * transformationMatrix[1, 0] + po.Z * transformationMatrix[2, 0] + transformationMatrix[3, 0];
+                    double newY =  po.X * transformationMatrix[0, 1] + po.Y * transformationMatrix[1, 1] + po.Z * transformationMatrix[2, 1] + transformationMatrix[3, 1];
+                    double newZ =  po.X * transformationMatrix[0, 2] + po.Y * transformationMatrix[1, 2] + po.Z * transformationMatrix[2, 2] + transformationMatrix[3, 2];
 
                     
                     pop.Faces[i].Vertices[j] = new point(newX, newY, newZ);
@@ -205,6 +218,19 @@ namespace Affine_transformations_in_space
 
 
             multMatr(translationMatrix);
+        }
+
+
+        private void xRotation(double a) 
+        {
+            double[,] matr = new double[,] {
+            { 1,0,0,0 },
+            {0,Math.Cos(a),Math.Sin(a),0 },
+            { 0,-Math.Sin(a),Math.Cos(a),0},
+            {0, 0 ,0, 1 }
+            };
+
+            multMatr(matr);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -235,6 +261,9 @@ namespace Affine_transformations_in_space
            
         }
 
-
+        private void button3_Click(object sender, EventArgs e)
+        {
+            scaleFigure(Convert.ToInt32(textBox1.Text), Convert.ToInt32(textBox2.Text), Convert.ToInt32(textBox3.Text));
+        }
     }
 }
