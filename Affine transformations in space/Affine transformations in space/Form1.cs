@@ -17,6 +17,7 @@ namespace Affine_transformations_in_space
 
         polyhedron pop;
         public Func<point, Point> projectFunc;
+        public int axis = 0;
         public static int scale = 100;
         
         public static double focalLength = 500; //Глубина
@@ -44,12 +45,21 @@ namespace Affine_transformations_in_space
             {
                 if (radionButton.Text == "Перспектива") projectFunc = PointTo2D;
                 if (radionButton.Text == "Изометрия") projectFunc = Isometric2DPoint;
+            }           
+            pictureBox1.Invalidate();            
+        }
+
+        void RadioAxisButton_CheckedChanged(object sender, EventArgs e) 
+        {
+           var axisButton = sender as RadioButton;
+
+            if (axisButton != null && axisButton.Checked) 
+            {
+                if(axisButton.Text == "XAxis") axis = 0;
+                if(axisButton.Text == "YAxis") axis = 1;
+                if(axisButton.Text == "ZAxis") axis = 2;
+
             }
-            
-            pictureBox1.Invalidate();
-
-
-            
         }
 
 
@@ -223,11 +233,46 @@ namespace Affine_transformations_in_space
 
         private void xRotation(double a) 
         {
+            double radians = a * Math.PI / 180;
+            double cos = Math.Cos(radians);
+            double sin = Math.Sin(radians);
+
             double[,] matr = new double[,] {
-            { 1,0,0,0 },
-            {0,Math.Cos(a),Math.Sin(a),0 },
-            { 0,-Math.Sin(a),Math.Cos(a),0},
-            {0, 0 ,0, 1 }
+            {1,0,0,0},
+            {0, cos, sin, 0},
+            {0, -sin, cos, 0},
+            {0, 0, 0, 1}
+            };
+
+            multMatr(matr);
+        }
+
+        private void yRotation(double a) 
+        {
+            double radians = a * Math.PI / 180;
+            double cos = Math.Cos(radians);
+            double sin = Math.Sin(radians); 
+            double[,] matr = new double[,] {
+            {cos, 0, -sin, 0},
+            {0, 1, 0, 0 },
+            {sin, 0, cos, 0},
+            {0, 0, 0, 1}
+            };
+
+            multMatr(matr);
+        }
+
+        private void zRotation(double a) 
+        {
+            double radians = a * Math.PI / 180;
+            double sin = Math.Sin(radians);
+            double cos = Math.Cos(radians);
+
+            double[,] matr = new double[,] {
+            {cos, sin, 0, 0 },
+            {-sin, cos, 0, 0 },
+            {0, 0, 1, 0 },
+            {0, 0, 0, 1 }         
             };
 
             multMatr(matr);
@@ -264,6 +309,23 @@ namespace Affine_transformations_in_space
         private void button3_Click(object sender, EventArgs e)
         {
             scaleFigure(Convert.ToInt32(textBox1.Text), Convert.ToInt32(textBox2.Text), Convert.ToInt32(textBox3.Text));
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+           
+            switch(axis) 
+            {
+                case 0:
+                    xRotation(Convert.ToInt32(axisBox.Text));
+                    break;
+                case 1:
+                    yRotation(Convert.ToInt32(axisBox.Text));
+                    break;
+                case 2:
+                    zRotation(Convert.ToInt32(axisBox.Text));
+                    break;
+            }
         }
     }
 }
