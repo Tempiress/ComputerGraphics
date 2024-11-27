@@ -31,7 +31,16 @@ const char* FragShaderSource = R"(
 }
 )";
 
+void checkOpenGLerror()
+{
+    if (GL_ARRAY_BUFFER != NULL)
+    {
+        printf("Error: VBO does not disabled");
+    }
 
+    
+    //glDisableVertexAttribArray
+}
 
 
 // Глобальные переменные это плохо, тут это сделано просто для примера
@@ -93,7 +102,7 @@ void InitShader()
     // Функция печати лога шейдера
     ShaderLog(fShader);
 
-
+    
     // Создаем программу и прикрепляем шейдеры к ней
     Program = glCreateProgram();
     glAttachShader(Program, vShader);
@@ -115,7 +124,7 @@ void InitShader()
         std::cout << "could not bind attrib " << attr_name << std::endl;
         return;
     }
-    //checkOpenGLerror();
+    
 
 }
 
@@ -137,7 +146,7 @@ void Draw() {
     glDrawArrays(GL_TRIANGLES, 0, 3); // Передаем данные на видеокарту(рисуем)
     glDisableVertexAttribArray(Attrib_vertex);   // Отключаем массив атрибутов    
     glUseProgram(0);   // Отключаем шейдерную программу
-    //checkOpenGLerror();
+    checkOpenGLerror();
 }
 
 
@@ -157,6 +166,21 @@ void SetIcon(sf::Window& wnd)
 }
 
 
+void GLAPIENTRY MessageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        type, severity, message);
+}
+
+
+
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
@@ -167,7 +191,11 @@ int main()
     void Init();
     void Draw();
 
+    // During init, enable debug output
+    glEnable(GL_DEBUG_OUTPUT);
 
+
+    glDebugMessageCallback(MessageCallback, 0);
     // Ставим иконку (окна с дефолтной картинкой это некрасиво)
     SetIcon(window);
     // Включаем вертикальную синхронизацию (синхронизация частоты отрисовки с частотой кадров монитора, чтобы картинка не фризила, делать это не обязательно)
@@ -196,7 +224,7 @@ int main()
 
         // Очистка буферов
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        //printf("%d", GL_position);
         // Рисуем сцену
         Draw();
 

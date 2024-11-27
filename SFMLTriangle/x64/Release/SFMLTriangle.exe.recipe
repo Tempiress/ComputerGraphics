@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\SFMLTriangle.exe</FullPath>
+      <FullPath>C:\Users\Danik\Desktop\SFMLTriangle\x64\Release\SFMLTriangle.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />

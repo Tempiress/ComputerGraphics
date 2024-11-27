@@ -10,3 +10,15 @@ D:\Programming2024\Computer Graphics\OpenGL\SFMLTriangle\x64\Debug\libpng16d.dll
 D:\Programming2024\Computer Graphics\OpenGL\SFMLTriangle\x64\Debug\brotlidec.dll
 D:\Programming2024\Computer Graphics\OpenGL\SFMLTriangle\x64\Debug\brotlicommon.dll
 D:\Programming2024\Computer Graphics\OpenGL\SFMLTriangle\x64\Debug\glew32d.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\SFMLTriangle.vcxproj.CopyComplete
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\SFMLTriangle.exe
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\glew32d.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\sfml-graphics-d-2.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\sfml-window-d-2.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\sfml-system-d-2.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\freetyped.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\zlibd1.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\bz2d.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\libpng16d.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\brotlidec.dll
+C:\Users\Danik\Desktop\SFMLTriangle\x64\Debug\brotlicommon.dll
