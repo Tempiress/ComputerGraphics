@@ -80,6 +80,7 @@
             this.radioButton9 = new System.Windows.Forms.RadioButton();
             this.radioButton10 = new System.Windows.Forms.RadioButton();
             this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.button9 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -601,7 +602,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(18, 556);
+            this.button8.Location = new System.Drawing.Point(7, 557);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 42;
@@ -625,28 +626,39 @@
             this.radioButton10.AutoSize = true;
             this.radioButton10.Location = new System.Drawing.Point(108, 19);
             this.radioButton10.Name = "radioButton10";
-            this.radioButton10.Size = new System.Drawing.Size(91, 17);
+            this.radioButton10.Size = new System.Drawing.Size(35, 17);
             this.radioButton10.TabIndex = 44;
             this.radioButton10.TabStop = true;
-            this.radioButton10.Text = "radioButton10";
+            this.radioButton10.Text = "Er";
             this.radioButton10.UseVisualStyleBackColor = true;
             // 
             // groupBox9
             // 
             this.groupBox9.Controls.Add(this.radioButton9);
             this.groupBox9.Controls.Add(this.radioButton10);
-            this.groupBox9.Location = new System.Drawing.Point(1064, 5);
+            this.groupBox9.Location = new System.Drawing.Point(1086, 7);
             this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(231, 54);
+            this.groupBox9.Size = new System.Drawing.Size(179, 54);
             this.groupBox9.TabIndex = 45;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "Lr";
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(88, 557);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(43, 23);
+            this.button9.TabIndex = 46;
+            this.button9.Text = "Загр";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // Afins3D
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1302, 592);
+            this.Controls.Add(this.button9);
             this.Controls.Add(this.groupBox9);
             this.Controls.Add(this.button8);
             this.Controls.Add(this.groupBox8);
@@ -739,6 +751,7 @@
         private System.Windows.Forms.RadioButton radioButton9;
         private System.Windows.Forms.RadioButton radioButton10;
         private System.Windows.Forms.GroupBox groupBox9;
+        private System.Windows.Forms.Button button9;
     }
 }
 

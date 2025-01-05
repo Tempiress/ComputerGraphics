@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 //1264
 //1275
@@ -16,6 +17,7 @@ namespace Lab8
         private static int _spin = 0;
         fileaction f = new fileaction();
         private Polyhedron _polyhedron;
+        private Polyhedron _polyhedron2;
         double d = 5;
         Projection projectionFunction = new Projection();
         private double _cameraAngle = 0;
@@ -30,7 +32,9 @@ namespace Lab8
             FarPlane = 200.0
         };
 
-
+        // Центр PictureBox
+        static int centerX;
+        static int centerY;
 
         int _fi;
         double _l;
@@ -46,6 +50,76 @@ namespace Lab8
         private double _inittranslationX, _inittranslationY, _inittranslationZ;
         private double _initscaleX, _initscaleY, _initscaleZ;
         private double _initrotationX, _initrotationY, _initrotationZ;
+
+        //List<SceneObject> sceneObjects = new List<SceneObject>
+        //{
+        //new SceneObject
+        //{
+        //    Polyhedron = Polyhedron.Tetrahedron(),
+        //    TranslationX = 0,
+        //    TranslationY = 0,
+        //    TranslationZ = 0,
+        //    RotationX = 0,
+        //    RotationY = 0,
+        //    RotationZ = 0,
+        //    ScaleX = 1,
+        //    ScaleY = 1,
+        //    ScaleZ = 1
+        //},
+        //new SceneObject
+        //{
+        //    Polyhedron = Polyhedron.Hexahedron(),
+        //    TranslationX = 5,
+        //    TranslationY = 0,
+        //    TranslationZ = 0,
+        //    RotationX = 45,
+        //    RotationY = 0,
+        //    RotationZ = 0,
+        //    ScaleX = 1,
+        //    ScaleY = 1,
+        //    ScaleZ = 1
+        //}\
+
+
+        List<SceneObject> sceneObjects2 = new List<SceneObject>
+        {
+        // Комната (куб)
+        new SceneObject
+        {
+            Polyhedron = Polyhedron.CreateRoom(10), // Комната размером 10x10x10
+            TranslationX = 0,            // Центр комнаты в начале координат
+            TranslationY = 0,
+            TranslationZ = 0,
+            RotationX = 0,
+            RotationY = 0,
+            RotationZ = 0,
+            ScaleX = 1,
+            ScaleY = 1,
+            ScaleZ = 1,
+
+        },
+        // Объект внутри комнаты (например, сфера или куб)
+        new SceneObject
+        {
+            Polyhedron = Polyhedron.Tetrahedron(), // Пример объекта (тетраэдр)
+            TranslationX = 0,                     // Объект в центре комнаты
+            TranslationY = 0,
+            TranslationZ = 0,
+            RotationX = 0,
+            RotationY = 0,
+            RotationZ = 0,
+            ScaleX = 0.5,                         // Масштабируем объект
+            ScaleY = 0.5,
+            ScaleZ = 0.5,
+        }
+        };
+
+
+
+        List<SceneObject> sceneObjects;
+        
+
+    
 
         public Afins3D()
         {
@@ -64,6 +138,10 @@ namespace Lab8
        
         private void Initialize()
         {
+            // Центр PictureBox
+            centerX = pictureBox1.Width / 2;
+            centerY = pictureBox1.Height / 2;
+
             _translationX = 0; _translationY = 0; _translationZ = 0;
             _scaleX = 1; _scaleY = 1; _scaleZ = 1;
             _rotationX = 0; _rotationY = 0; _rotationZ = 0;
@@ -183,44 +261,53 @@ namespace Lab8
             //                                  ScalingMatrix(_scaleX, _scaleY, _scaleZ) *
             //                                  RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
 
-
-            // Вычисляем центроид фигуры
-            Vertex centroid = _polyhedron.Centroid(_polyhedron.LocalToWorld);
-
-            // Матрица перемещения в центр
-            Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
-
-            // Матрица преобразований (вращение, масштабирование и т.д.)
-            Matrix transformationMatrix = RotationMatrix(_initrotationX, _initrotationY, _initrotationZ) *
-                                          ScalingMatrix(_scaleX, _scaleY, _scaleZ);
-
-            // Матрица возврата на место
-            Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-
-            // Матрица отдельного перемещения
-            Matrix translationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ);
-
-            // Финальная матрица преобразования
-            Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
-
-            int q = 1;
-            // Рендерим все грани
-            foreach (var face in _polyhedron.Faces)
-            {
-                if(q == 1) renderer.RenderFace(face, finalTransformationMatrix, Pens.Yellow);
-                else if(q == 2) renderer.RenderFace(face, finalTransformationMatrix, Pens.Black);
-                else if(q == 3) renderer.RenderFace(face, finalTransformationMatrix, Pens.Azure);
-                else if(q == 4) renderer.RenderFace(face, finalTransformationMatrix, Pens.Red);
-                else if (q == 5) renderer.RenderFace(face, finalTransformationMatrix, Pens.Green);
-                q++;
-                //renderer.RenderFace(face, transformationMatrix, Pens.Black);
-                renderer.DrawToGraphics(e.Graphics);
-            }
-
             renderer.ClearBuffer();
 
+            foreach (var sceneObject in sceneObjects)
+            {
+                // Вычисляем центроид фигуры
+                Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
+
+                // Матрица перемещения в центр
+                Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
+
+                // Матрица преобразований (вращение, масштабирование и т.д.)
+                Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY,sceneObject.RotationZ) *
+                                              ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.RotationZ);
+                
+                // Матрица возврата на место
+                Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
+
+                // Матрица отдельного перемещения
+                Matrix translationMatrix = TranslationMatrix( sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
+
+                // Финальная матрица преобразования
+                Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
+
+                int q = 1;
+                // Рендерим все грани
+                foreach (var face in sceneObject.Polyhedron.Faces)
+                {
+                    if (q == 1) renderer.RenderFace(face, finalTransformationMatrix, Pens.Yellow);
+                    else if (q == 2) renderer.RenderFace(face, finalTransformationMatrix, Pens.Black);
+                    else if (q == 3) renderer.RenderFace(face, finalTransformationMatrix, Pens.Azure);
+                    else if (q == 4) renderer.RenderFace(face, finalTransformationMatrix, Pens.Red);
+                    else if (q == 5) renderer.RenderFace(face, finalTransformationMatrix, Pens.Green);
+                    q++;
+                    //renderer.RenderFace(face, transformationMatrix, Pens.Black);
+                    //renderer.DrawToGraphics(e.Graphics);
+                }
+            }
+
+            renderer.DrawToGraphics(e.Graphics);
+
+
+
+
+            //renderer.ClearBuffer();
+
             //Направление обзора
-            var viewDirection = new Vertex(1, 0, -1);
+            //var viewDirection = new Vertex(1, 0, -1);
 
 
             ////END--------------------------- ZBUFFER
@@ -413,6 +500,11 @@ namespace Lab8
             _translationY = Convert.ToDouble(dyBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
             _translationZ = Convert.ToDouble(dzBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
 
+
+            sceneObjects[0].TranslationX = _translationX;
+            sceneObjects[0].TranslationY = _translationY;
+            sceneObjects[0].TranslationZ = _translationZ;
+
             pictureBox1.Invalidate();
         }
 
@@ -453,6 +545,49 @@ namespace Lab8
             pictureBox1.Invalidate();
         }
 
+        private void button9_Click(object sender, EventArgs e)
+        {
+            string file_name = "D:\\Programming2024\\Computer Graphics\\GitComputerGraphics\\The Cornish Room\\bin\\cubeq2.obj";
+            string file_name2 = "D:\\Programming2024\\Computer Graphics\\GitComputerGraphics\\The Cornish Room\\bin\\cubeq2.obj";
+
+            _polyhedron = f.LoadFromOBJ(file_name);
+            _polyhedron2 = f.LoadFromOBJ(file_name2);
+
+            sceneObjects = new List<SceneObject> {
+
+                new SceneObject
+                {
+                    Polyhedron =  _polyhedron,
+                    TranslationX = 0,
+                    TranslationY = 0,
+                    TranslationZ = 0,
+                    RotationX = 0,
+                    RotationY = 0,
+                    RotationZ = 0,
+                    ScaleX = 1,
+                    ScaleY = 1,
+                    ScaleZ = 1
+                },
+
+                new SceneObject
+                {
+                    Polyhedron =  _polyhedron2,
+                    TranslationX = 0,
+                    TranslationY = 0,
+                    TranslationZ = 0,
+                    RotationX = 0,
+                    RotationY = 0,
+                    RotationZ = 0,
+                    ScaleX = 1,
+                    ScaleY = 1,
+                    ScaleZ = 1
+                }
+
+            };
+            pictureBox1.Invalidate();
+        }
+
+
         private void ButtonLoad_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.Cancel) 
@@ -461,7 +596,9 @@ namespace Lab8
             }
             string filename = openFileDialog1.FileName;
             //string filetext = System.IO.File.ReadAllText(filename);
+            MessageBox.Show(filename);
             _polyhedron = f.LoadFromOBJ(filename);
+            _polyhedron2 = _polyhedron;
             pictureBox1.Invalidate();
             
             //MessageBox.Show("asd");
@@ -806,6 +943,20 @@ namespace Lab8
         }
 
 
+    }
+
+    public class SceneObject
+    {
+        public Polyhedron Polyhedron { get; set; } // Геометрия объекта
+        public double TranslationX { get; set; }   // Перемещение по X
+        public double TranslationY { get; set; }   // Перемещение по Y
+        public double TranslationZ { get; set; }   // Перемещение по Z
+        public double RotationX { get; set; }      // Вращение вокруг X
+        public double RotationY { get; set; }      // Вращение вокруг Y
+        public double RotationZ { get; set; }      // Вращение вокруг Z
+        public double ScaleX { get; set; }         // Масштабирование по X
+        public double ScaleY { get; set; }         // Масштабирование по Y
+        public double ScaleZ { get; set; }         // Масштабирование по Z
     }
 
 }

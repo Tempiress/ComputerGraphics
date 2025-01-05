@@ -38,6 +38,34 @@ namespace Lab8
             return new Polyhedron(new List<Vertex> { v1, v2, v3, v4 }, new List<Face> {firstPol, secondPol, thirdPol, fourthPol });
         }
 
+        public static Polyhedron CreateRoom(double size)
+        {
+            double halfSize = size / 2;
+            var vertices = new List<Vertex>
+        {
+            new Vertex(-halfSize, -halfSize, -halfSize), // 0
+            new Vertex(halfSize, -halfSize, -halfSize),  // 1
+            new Vertex(-halfSize, halfSize, -halfSize),  // 2
+            new Vertex(halfSize, halfSize, -halfSize),   // 3
+            new Vertex(-halfSize, -halfSize, halfSize),  // 4
+            new Vertex(halfSize, -halfSize, halfSize),   // 5
+            new Vertex(-halfSize, halfSize, halfSize),   // 6
+            new Vertex(halfSize, halfSize, halfSize)     // 7
+        };
+
+                var faces = new List<Face>
+        {
+            new Face(new List<Vertex> { vertices[0], vertices[1], vertices[3], vertices[2] }), // Задняя грань
+            new Face(new List<Vertex> { vertices[4], vertices[5], vertices[7], vertices[6] }), // Передняя грань
+            new Face(new List<Vertex> { vertices[0], vertices[1], vertices[5], vertices[4] }), // Нижняя грань
+            new Face(new List<Vertex> { vertices[2], vertices[3], vertices[7], vertices[6] }), // Верхняя грань
+            new Face(new List<Vertex> { vertices[0], vertices[2], vertices[6], vertices[4] }), // Левая грань
+            new Face(new List<Vertex> { vertices[1], vertices[3], vertices[7], vertices[5] })  // Правая грань
+        };
+
+            return new Polyhedron(vertices, faces);
+        }
+
         public static Polyhedron Hexahedron()
         {
             var v1 = new Vertex(-20 - 100, -20, -20);
