@@ -35,9 +35,45 @@ namespace Lab8
             v.Z = Z;
         }
 
+        //Скалярное произведение
+        public static double Dot(Vertex a, Vertex b) 
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
 
 
+        // Метод для векторного произведения
+        public static Vertex Cross(Vertex a, Vertex b)
+        {
+            return new Vertex(
+                a.Y * b.Z - a.Z * b.Y, // X
+                a.Z * b.X - a.X * b.Z, // Y
+                a.X * b.Y - a.Y * b.X  // Z
+            );
+        }
 
+        // Метод для нормализации вектора
+        public  Vertex Normalize()
+        {
+            double length = Math.Sqrt(X * X + Y * Y + Z * Z); // Длина вектора
+
+            if (length == 0)
+                throw new InvalidOperationException("Невозможно нормализовать нулевой вектор.");
+
+            // Возвращаем новый нормализованный вектор
+            return new Vertex(X / length, Y / length, Z / length);
+        }
+
+        public static Vertex operator *(Vertex v, double d) 
+        {
+
+            return new Vertex(v.X * d, v.Y * d, v.Z * d);
+        }
+
+        public static Vertex operator -(Vertex v1, Vertex v2) 
+        {
+            return new Vertex(v1.X - v2.X, v1.Y - v2.Y, v2.Z - v2.Z);
+        }
         public static Vertex operator +(Vertex v1, Vertex v2) 
         {
             return new Vertex(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);

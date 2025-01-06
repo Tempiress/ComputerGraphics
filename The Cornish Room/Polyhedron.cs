@@ -23,12 +23,31 @@ namespace Lab8
             { 0, 0, 0, 1 }
         });
 
-        public static Polyhedron Tetrahedron()
+        public Vertex Centroid(Matrix matrix)
         {
-            var v1 = new Vertex(1 , 1 , 1 );
-            var v2 = new Vertex(1  , -1  , -1  );
-            var v3 = new Vertex(-1  , 1  , -1  );
-            var v4 = new Vertex(-1  , -1  , 1  ) ;
+            double centerX = 0; double centerY = 0; double centerZ = 0;
+            foreach (Vertex vertex in Vertices)
+            {
+                var v = Transformer.TransformToWorld(vertex, matrix, p);
+                centerX += v.X;
+                centerY += v.Y;
+                centerZ += v.Z;
+            }
+            int count = Vertices.Count;
+            centerX /= count;
+            centerY /= count;
+            centerZ /= count;
+
+            return new Vertex(centerX, centerY, centerZ);
+        }
+
+
+        public static Polyhedron Tetrahedron(int index_size)
+        {
+            var v1 = new Vertex(1 * index_size, 1 * index_size, 1 );
+            var v2 = new Vertex(1 * index_size  , -1 * index_size, -1  );
+            var v3 = new Vertex(-1 * index_size, 1 * index_size, -1  );
+            var v4 = new Vertex(-1 * index_size, -1 * index_size, 1  ) ;
 
             Face firstPol = new Face(new List<Vertex> { v1, v2, v3 });
             Face secondPol = new Face(new List<Vertex> { v1, v2, v4 });
@@ -55,7 +74,7 @@ namespace Lab8
 
                 var faces = new List<Face>
         {
-            new Face(new List<Vertex> { vertices[0], vertices[1], vertices[3], vertices[2] }), // Задняя грань
+            //new Face(new List<Vertex> { vertices[0], vertices[1], vertices[3], vertices[2] }), // Задняя грань
             new Face(new List<Vertex> { vertices[4], vertices[5], vertices[7], vertices[6] }), // Передняя грань
             new Face(new List<Vertex> { vertices[0], vertices[1], vertices[5], vertices[4] }), // Нижняя грань
             new Face(new List<Vertex> { vertices[2], vertices[3], vertices[7], vertices[6] }), // Верхняя грань
@@ -213,22 +232,6 @@ namespace Lab8
             return new Polyhedron(vertices, faces);
         }
 
-        public Vertex Centroid(Matrix matrix)
-        {
-            double centerX = 0; double centerY = 0; double centerZ = 0;
-            foreach (Vertex vertex in Vertices)
-            {
-                var v = Transformer.TransformToWorld(vertex, matrix, p);
-                centerX += v.X;
-                centerY += v.Y;
-                centerZ += v.Z;
-            }
-            int count = Vertices.Count;
-            centerX /= count;
-            centerY /= count;
-            centerZ /= count;
 
-            return new Vertex(centerX, centerY, centerZ);
-        }
     }
 }

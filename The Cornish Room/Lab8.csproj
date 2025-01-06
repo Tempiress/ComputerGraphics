@@ -64,6 +64,9 @@
     </Compile>
     <Compile Include="Matrix.cs" />
     <Compile Include="Normale.cs" />
+    <Compile Include="PointLight.cs" />
+    <Compile Include="RayTracer.cs" />
+    <Compile Include="SceneObject.cs" />
     <Compile Include="Vertex.cs" />
     <Compile Include="Polyhedron.cs" />
     <Compile Include="Program.cs" />

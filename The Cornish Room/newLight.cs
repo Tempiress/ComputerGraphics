@@ -1,4 +1,6 @@
-﻿using Lab6;
+//form1.cs
+
+using Lab6;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -213,93 +215,35 @@ namespace Lab8
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
 
-            if (renderer == null)
+            // Создаем Ray Tracer (если он еще не создан)
+            if (rayTracer == null)
             {
-                renderer = new ZBufferRenderer(pictureBox1.Width, pictureBox1.Height, projectionFunction);
+                rayTracer = new RayTracer(sceneObjects, light);
             }
 
-            // Очистка Z-буфера
-            renderer.ClearBuffer();
+            // Очистка PictureBox (если нужно)
+            e.Graphics.Clear(Color.Black);
 
-            // Рендеринг всех объектов
-            foreach (var sceneObject in sceneObjects)
+            // Рендеринг сцены
+            for (int y = 0; y < pictureBox1.Height; y++)
             {
-                Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
-
-                Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
-                Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY, sceneObject.RotationZ) *
-                                              ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.ScaleZ);
-                Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-                Matrix translationMatrix = TranslationMatrix(sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
-
-                Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
-
-                // Рендеринг каждой грани объекта
-                foreach (var face in sceneObject.Polyhedron.Faces)
+                for (int x = 0; x < pictureBox1.Width; x++)
                 {
-                    // Используем RayTracer для расчета цвета
+                    // Выпускаем луч из камеры через пиксель (x, y)
                     Vertex rayOrigin = _camera.Position;
-                    Vertex rayDirection = CalculateRayDirection(/* координаты грани */);
+                    Vertex rayDirection = CalculateRayDirection(x, y);
 
+                    // Трассируем луч и получаем цвет пикселя
                     Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-                    renderer.RenderFace(face, finalTransformationMatrix, new Pen(pixelColor));
+
+                    // Рисуем пиксель на PictureBox
+                    using (var brush = new SolidBrush(pixelColor))
+                    {
+                        e.Graphics.FillRectangle(brush, x, y, 1, 1);
+                    }
                 }
             }
 
-            // Отрисовка результата на PictureBox
-            renderer.DrawToGraphics(e.Graphics);
-
-
-
-
-
-
-
-            // Создаем Ray Tracer (если он еще не создан)
-            //if (rayTracer == null)
-            //{
-            //    rayTracer = new RayTracer(sceneObjects, light);
-            //}
-
-            //// Создаем Bitmap для рендеринга
-            //Bitmap bitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-
-            //// Рендеринг сцены
-            //for (int y = 0; y < bitmap.Height; y++)
-            //{
-            //    for (int x = 0; x < bitmap.Width; x++)
-            //    {
-            //        Vertex rayOrigin = _camera.Position;
-            //        Vertex rayDirection = CalculateRayDirection(x, y);
-
-            //        Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-            //        bitmap.SetPixel(x, y, pixelColor);
-            //    }
-            //}
-            //// Отображаем Bitmap на PictureBox
-            //e.Graphics.DrawImage(bitmap, 0, 0);
-            // Очистка PictureBox (если нужно)
-            //e.Graphics.Clear(Color.Black);
-
-            //// Рендеринг сцены
-            //for (int y = 0; y < pictureBox1.Height; y++)
-            //{
-            //    for (int x = 0; x < pictureBox1.Width; x++)
-            //    {
-            //        // Выпускаем луч из камеры через пиксель (x, y)
-            //        Vertex rayOrigin = _camera.Position;
-            //        Vertex rayDirection = CalculateRayDirection(x, y);
-
-            //        // Трассируем луч и получаем цвет пикселя
-            //        Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-
-            //        // Рисуем пиксель на PictureBox
-            //        using (var brush = new SolidBrush(pixelColor))
-            //        {
-            //            e.Graphics.FillRectangle(brush, x, y, 1, 1);
-            //        }
-            //    }
-            //}
 
 
 
@@ -308,9 +252,8 @@ namespace Lab8
 
 
 
-
-            //if (_polyhedron == null)
-            //    return;
+            if (_polyhedron == null)
+                return;
 
             //_inittranslationX += _translationX;
             //_inittranslationY += _translationY;
@@ -367,56 +310,56 @@ namespace Lab8
 
 
             //BEGIN---------------------------ZBUFFER
-            //if (renderer == null)
-            //{
-            //    renderer = new ZBufferRenderer(e.ClipRectangle.Width, e.ClipRectangle.Height, projectionFunction);
-            //}
-            ////finalTransformationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ) *
-            ////                                  ScalingMatrix(_scaleX, _scaleY, _scaleZ) *
-            ////                                  RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
+            if (renderer == null)
+            {
+                renderer = new ZBufferRenderer(e.ClipRectangle.Width, e.ClipRectangle.Height, projectionFunction);
+            }
+            //finalTransformationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ) *
+            //                                  ScalingMatrix(_scaleX, _scaleY, _scaleZ) *
+            //                                  RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
 
-            //renderer.ClearBuffer();
+            renderer.ClearBuffer();
 
-            //foreach (var sceneObject in sceneObjects)
-            //{
-            //    // Вычисляем центроид фигуры
-            //    Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
+            foreach (var sceneObject in sceneObjects)
+            {
+                // Вычисляем центроид фигуры
+                Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
 
-            //    // Матрица перемещения в центр
-            //    Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y , -centroid.Z);
+                // Матрица перемещения в центр
+                Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y , -centroid.Z);
 
-            //    // Матрица преобразований (вращение, масштабирование и т.д.)
-            //    Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY,sceneObject.RotationZ) *
-            //                                  ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.RotationZ);
+                // Матрица преобразований (вращение, масштабирование и т.д.)
+                Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY,sceneObject.RotationZ) *
+                                              ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.RotationZ);
+                
+                // Матрица возврата на место
+                Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
 
-            //    // Матрица возврата на место
-            //    Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
+                // Матрица отдельного перемещения
+                Matrix translationMatrix = TranslationMatrix( sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
 
-            //    // Матрица отдельного перемещения
-            //    Matrix translationMatrix = TranslationMatrix( sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
+                // Финальная матрица преобразования
+                Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
 
-            //    // Финальная матрица преобразования
-            //    Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
-
-            //    int q = 1;
-            //    // Рендерим все грани
-            //    foreach (var face in sceneObject.Polyhedron.Faces)
-            //    {
+                int q = 1;
+                // Рендерим все грани
+                foreach (var face in sceneObject.Polyhedron.Faces)
+                {
 
 
-            //        if (q == 1) renderer.RenderFace(face, finalTransformationMatrix, Pens.Yellow);
-            //        else if (q == 2) renderer.RenderFace(face, finalTransformationMatrix, Pens.Black);
-            //        else if (q == 3) renderer.RenderFace(face, finalTransformationMatrix, Pens.Azure);
-            //        else if (q == 4) renderer.RenderFace(face, finalTransformationMatrix, Pens.Red);
-            //        else if (q == 5) renderer.RenderFace(face, finalTransformationMatrix, Pens.Green);
-            //        else renderer.RenderFace(face, finalTransformationMatrix, Pens.Brown);
-            //        q++;
-            //        //renderer.RenderFace(face, transformationMatrix, Pens.Black);
-            //        //renderer.DrawToGraphics(e.Graphics);
-            //    }
-            //}
+                    if (q == 1) renderer.RenderFace(face, finalTransformationMatrix, Pens.Yellow);
+                    else if (q == 2) renderer.RenderFace(face, finalTransformationMatrix, Pens.Black);
+                    else if (q == 3) renderer.RenderFace(face, finalTransformationMatrix, Pens.Azure);
+                    else if (q == 4) renderer.RenderFace(face, finalTransformationMatrix, Pens.Red);
+                    else if (q == 5) renderer.RenderFace(face, finalTransformationMatrix, Pens.Green);
+                    else renderer.RenderFace(face, finalTransformationMatrix, Pens.Brown);
+                    q++;
+                    //renderer.RenderFace(face, transformationMatrix, Pens.Black);
+                    //renderer.DrawToGraphics(e.Graphics);
+                }
+            }
 
-            //renderer.DrawToGraphics(e.Graphics);
+            renderer.DrawToGraphics(e.Graphics);
 
 
 
@@ -1076,7 +1019,628 @@ namespace Lab8
 
 
     }
+}
+
+
+//Normale.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    public class Normale
+    {
+        public double NX { get; set; } //Нормаль по X
+        public double NY { get; set; } //Нормаль по Y
+        public double NZ { get; set; } //Нормаль по Z
+        Normale(double nx, double ny, double nz) 
+        {
+
+            NX = nx;
+            NY = ny;
+            NZ = nz;
+
+        }
+
+    }
+}
+
+
+//RayTracer.cs
+using Lab8;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    internal class RayTracer
+    {
+
+
+        private List<SceneObject> sceneObjects;
+        private PointLight light;
+
+        public RayTracer(List<SceneObject> objects, PointLight light)
+        {
+            this.sceneObjects = objects;
+            this.light = light;
+        }
+
+        // Метод для выпуска луча и расчета цвета пикселя
+        public Color TraceRay(Vertex rayOrigin, Vertex rayDirection)
+        {
+            // Поиск ближайшего пересечения
+            SceneObject closestObject = null;
+            double closestDistance = double.MaxValue;
+            Vertex intersectionPoint = null;
+
+            foreach (var obj in sceneObjects)
+            {
+                var intersection = obj.Intersect(rayOrigin, rayDirection);
+                if (intersection != null && intersection.Distance < closestDistance)
+                {
+                    closestDistance = intersection.Distance;
+                    closestObject = obj;
+                    intersectionPoint = intersection.Point;
+                }
+            }
+
+            // Если луч не пересекает объекты, возвращаем фоновый цвет
+            if (closestObject == null)
+                return Color.Black;
+
+            // Расчет освещения
+            return CalculateLighting(intersectionPoint, closestObject);
+        }
+
+        // Метод для расчета освещения в точке пересечения
+        private Color CalculateLighting(Vertex point, SceneObject obj)
+        {
+            // Вектор от точки пересечения к источнику света
+            Vertex lightDirection = (light.Position - point).Normalize();
+
+            // Проверка на тени (если луч от точки к свету пересекает другие объекты)
+            bool inShadow = false;
+            foreach (var otherObj in sceneObjects)
+            {
+                if (otherObj != obj && otherObj.Intersect(point, lightDirection) != null)
+                {
+                    inShadow = true;
+                    break;
+                }
+            }
+
+            // Если точка в тени, возвращаем темный цвет
+            if (inShadow)
+                return Color.FromArgb((int)(obj.Color.R * 0.2), (int)(obj.Color.G * 0.2), (int)(obj.Color.B * 0.2));
+
+            // Расчет диффузного освещения
+            Vertex normal = obj.GetNormal(point); // Нормаль к поверхности
+            double diffuse = Math.Max(0, Vertex.Dot(normal, lightDirection));
+
+            // Цвет с учетом освещения
+            int r = (int)(obj.Color.R * diffuse * light.Intensity);
+            int g = (int)(obj.Color.G * diffuse * light.Intensity);
+            int b = (int)(obj.Color.B * diffuse * light.Intensity);
+
+            return Color.FromArgb(r, g, b);
+        }
+
+    }
+}
+
+
+//Vertex.cs
+using System;
+
+namespace Lab8
+{
+    public class Vertex
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; }
+        public double W { get; set; }
+       
+
+
+        public Vertex(double x, double y, double z, double w = 1)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+           
+        }
+
+        public Vertex(Vertex a, Vertex b) 
+        {
+            a.X = X;
+            a.Y = Y;
+            a.Z = Z;
+
+        }
+
+        public Vertex(Vertex v) 
+        {
+            v.X = X;
+            v.Y = Y;
+            v.Z = Z;
+        }
+
+        //Скалярное произведение
+        public static double Dot(Vertex a, Vertex b) 
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+
+        // Метод для векторного произведения
+        public static Vertex Cross(Vertex a, Vertex b)
+        {
+            return new Vertex(
+                a.Y * b.Z - a.Z * b.Y, // X
+                a.Z * b.X - a.X * b.Z, // Y
+                a.X * b.Y - a.Y * b.X  // Z
+            );
+        }
+
+        // Метод для нормализации вектора
+        public  Vertex Normalize()
+        {
+            double length = Math.Sqrt(X * X + Y * Y + Z * Z); // Длина вектора
+
+            if (length == 0)
+                throw new InvalidOperationException("Невозможно нормализовать нулевой вектор.");
+
+            // Возвращаем новый нормализованный вектор
+            return new Vertex(X / length, Y / length, Z / length);
+        }
+
+        public static Vertex operator *(Vertex v, double d) 
+        {
+
+            return new Vertex(v.X * d, v.Y * d, v.Z * d);
+        }
+
+        public static Vertex operator -(Vertex v1, Vertex v2) 
+        {
+            return new Vertex(v1.X - v2.X, v1.Y - v2.Y, v2.Z - v2.Z);
+        }
+        public static Vertex operator +(Vertex v1, Vertex v2) 
+        {
+            return new Vertex(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
+        }
+
+        public static Vertex operator /(Vertex v, double scalar) 
+        {
+            if (scalar == 0)throw new DivideByZeroException("Деление на ноль!");
+
+            return new Vertex(v.X / scalar, v.Y / scalar, v.Z / scalar);
+        }
+
+        //public static Vertex operator/=(Vertex v, double scalar)
+        //{
+
+        //    if (scalar == 0) 
+        //    {
+        //        throw new DivideByZeroException("Деление на ноль! В школе не учился? :)");
+        //    }
+
+        //    v.X /= scalar;
+        //    v.Y /= scalar;
+        //    v.Z /= scalar;
+        //    return v;
+        //}
+    }
+}
+
+
+//SceneObject.cs
+using Lab8;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    internal class SceneObject
+    {
+        public Polyhedron Polyhedron { get; set; } // Геометрия объекта
+        public double TranslationX { get; set; }   // Перемещение по X
+        public double TranslationY { get; set; }   // Перемещение по Y
+        public double TranslationZ { get; set; }   // Перемещение по Z
+        public double RotationX { get; set; }      // Вращение вокруг X
+        public double RotationY { get; set; }      // Вращение вокруг Y
+        public double RotationZ { get; set; }      // Вращение вокруг Z
+        public double ScaleX { get; set; }         // Масштабирование по X
+        public double ScaleY { get; set; }         // Масштабирование по Y
+        public double ScaleZ { get; set; }         // Масштабирование по Z
+        public Color Color { get; set; }
+
+
+        public IntersectionResult Intersect(Vertex rayOrigin, Vertex rayDirection)
+        {
+            IntersectionResult closestIntersection = null;
+            double closestDistance = double.MaxValue;
+
+            // Перебираем все грани куба
+            foreach (var face in Polyhedron.Faces)
+            {
+                // Получаем нормаль к грани
+                Vertex normal = GetFaceNormal(face);
+
+                // Вычисляем пересечение луча с плоскостью грани
+                double denominator = Vertex.Dot(normal, rayDirection);
+
+                // Если луч параллелен грани, пересечения нет
+                if (Math.Abs(denominator) < 1e-6)
+                    continue;
+
+                // Вычисляем расстояние до плоскости
+                Vertex pointOnPlane = face.Vertices[0]; // Любая точка на грани
+                double t = Vertex.Dot(pointOnPlane - rayOrigin, normal) / denominator;
+
+                // Если пересечение за лучом, игнорируем
+                if (t < 0)
+                    continue;
+
+                // Точка пересечения
+                Vertex intersectionPoint = rayOrigin + rayDirection * t;
+
+                // Проверяем, лежит ли точка внутри грани
+                if (IsPointInsideFace(intersectionPoint, face))
+                {
+                    // Если это ближайшее пересечение, сохраняем его
+                    if (t < closestDistance)
+                    {
+                        closestDistance = t;
+                        closestIntersection = new IntersectionResult
+                        {
+                            Point = intersectionPoint,
+                            Distance = t
+                        };
+                    }
+                }
+            }
+
+            return closestIntersection;
+        }
+
+        // Метод для вычисления нормали к грани
+        private Vertex GetFaceNormal(Face face)
+        {
+            Vertex v0 = face.Vertices[0];
+            Vertex v1 = face.Vertices[1];
+            Vertex v2 = face.Vertices[2];
+
+            Vertex edge1 = v1 - v0;
+            Vertex edge2 = v2 - v0;
+
+            // Вычисляем векторное произведение
+            Vertex norml = Vertex.Cross(edge1, edge2);
+
+            // Проверяем, не является ли вектор нулевым
+            double length = Math.Sqrt(norml.X * norml.X + norml.Y * norml.Y + norml.Z * norml.Z);
+            if (length < 1e-6) // Пороговое значение для проверки нулевого вектора
+            {
+                // Возвращаем вектор по умолчанию или выбрасываем исключение
+                return new Vertex(0, 0, 1);
+                //throw new InvalidOperationException("Невозможно вычислить нормаль: ребра грани коллинеарны.");
+                // Или вернуть вектор по умолчанию:
+                // return new Vertex(0, 0, 1);
+            }
+
+            // Нормализуем вектор
+            return norml.Normalize();
+        }
+
+        // Метод для проверки, лежит ли точка внутри грани
+        private bool IsPointInsideFace(Vertex point, Face face)
+        {
+            // Простейшая реализация: проверяем, лежит ли точка внутри выпуклого многоугольника
+            // (Этот метод можно улучшить для более сложных случаев)
+            Vertex normal = GetFaceNormal(face);
+
+            for (int i = 0; i < face.Vertices.Count; i++)
+            {
+                Vertex v1 = face.Vertices[i];
+                Vertex v2 = face.Vertices[(i + 1) % face.Vertices.Count];
+
+                Vertex edge = v2 - v1;
+                Vertex toPoint = point - v1;
+
+                Vertex cross = Vertex.Cross(edge, toPoint);
+
+                if (Vertex.Dot(cross, normal) < 0)
+                    return false; // Точка находится за пределами грани
+            }
+
+            return true; // Точка внутри грани
+        }
+
+        public Vertex GetNormal(Vertex point)
+        {
+            // Нормаль к поверхности сферы
+            Vertex center = Polyhedron.Centroid(Polyhedron.LocalToWorld);
+            return (point - center).Normalize();
+        }
+    }
+
+        public class IntersectionResult
+        {
+            public Vertex Point { get; set; }
+            public double Distance { get; set; }
+        }
 
 
 
 }
+
+//ZBufferRenderer.cs
+using Lab8;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    public class ZBufferRenderer
+    {
+        private readonly int width;
+        private readonly int height;
+        private readonly double[,] zBuffer;
+        private readonly Bitmap renderBitmap;
+        Projection projectionFunction;
+        public ZBufferRenderer(int width, int height, Projection projectionFunc)
+        {
+            this.width = width;
+            this.height = height;
+            projectionFunction = projectionFunc;
+            zBuffer = new double[width, height];
+            this.renderBitmap = new Bitmap(width, height);
+            ClearBuffer();
+        }
+
+        public void ClearBuffer()
+        {
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    zBuffer[x, y] = double.MaxValue;
+                    renderBitmap.SetPixel(x, y, Color.White); // Очистка Bitmap 
+                }
+            }
+        }
+
+        public void RenderFace(Face face, Matrix transformationMatrix, Pen pen)
+        {
+            // Преобразование вершин в мировые координаты
+            var transformedVertices = face.Vertices.Select(v => Transformer.TransformToWorld(v, transformationMatrix, projectionFunction)).ToList();
+
+            // Растеризация треугольников (каждая грань разбивается на треугольники)
+            for (int i = 1; i < transformedVertices.Count - 1; i++)
+            {
+                RasterizeTriangle( transformedVertices[0], transformedVertices[i], transformedVertices[i + 1], pen);
+            }
+        }
+
+        private void RasterizeTriangle(Vertex v1, Vertex v2, Vertex v3, Pen pen)
+        {
+            // Найти границы треугольника на экране
+            int minX = (int)Math.Min(Math.Min(v1.X, v2.X), v3.X);
+            int maxX = (int)Math.Max(Math.Max(v1.X, v2.X), v3.X);
+            int minY = (int)Math.Min(Math.Min(v1.Y, v2.Y), v3.Y);
+            int maxY = (int)Math.Max(Math.Max(v1.Y, v2.Y), v3.Y);
+
+            // Ограничить область отрисовки экраном
+            minX = Math.Max(minX, 0);
+            maxX = Math.Min(maxX, width - 1);
+            minY = Math.Max(minY, 0);
+            maxY = Math.Min(maxY, height - 1);
+
+            // Растеризация пикселей в треугольнике
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    if (IsPointInTriangle(x, y, v1, v2, v3, out double z))
+                    {
+                        // Z-буферная проверка
+                        if (z < zBuffer[x, y])
+                        {
+                            zBuffer[x, y] = z;
+                            //graphics.DrawRectangle(pen, x, y, 1, 1); // Отрисовка пикселя
+                            renderBitmap.SetPixel(x, y, pen.Color); // Устанавливаем цвет пикселя
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsPointInTriangle(int px, int py, Vertex v1, Vertex v2, Vertex v3, out double z)
+        {
+            // Проверка, находится ли точка внутри треугольника, и интерполяция Z
+            z = double.MaxValue;
+            var a = v1;
+            var b = v2;
+            var c = v3;
+
+            double alpha = ((b.Y - c.Y) * (px - c.X) + (c.X - b.X) * (py - c.Y)) /
+                           ((b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y));
+            double beta = ((c.Y - a.Y) * (px - c.X) + (a.X - c.X) * (py - c.Y)) /
+                          ((b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y));
+            double gamma = 1.0 - alpha - beta;
+
+            if (alpha >= 0 && beta >= 0 && gamma >= 0)
+            {
+                z = alpha * v1.Z + beta * v2.Z + gamma * v3.Z;
+                return true;
+            }
+
+            return false;
+        }
+
+        // Метод для отрисовки Bitmap на целевую поверхность
+        public void DrawToGraphics(Graphics graphics)
+        {
+            graphics.DrawImage(renderBitmap, 0, 0); // Отрисовка Bitmap на Graphics
+        }
+
+    }
+
+}
+
+
+//Camera.cs
+using Lab8;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Lab6
+{
+    public class Camera
+    {
+        public Vertex Position { get; set; }
+        public Vertex Target { get; set; }
+        public Vertex Up { get; set; } = new Vertex(0, 1, 0); // Вектор "вверх" камеры
+
+
+        public double FieldOfView { get; set; } = Math.PI / 4; // Угол обзора (рад)
+        public double AspectRatio { get; set; } = 1.0; // Соотношение сторон экрана
+        public double NearPlane { get; set; } = 0.1; // Ближняя плоскость отсечения
+        public double FarPlane { get; set; } = 100.0; // Дальняя плоскость отсечения
+
+        // Получение матрицы вида (View Matrix)
+        public Matrix GetViewMatrix()
+        {
+            var zAxis = Normalize(new Vertex(
+                Position.X - Target.X,
+                Position.Y - Target.Y,
+                Position.Z - Target.Z
+            ));
+
+            var xAxis = Normalize(CrossProduct(Up, zAxis));
+            var yAxis = CrossProduct(zAxis, xAxis);
+
+            return new Matrix(new[,]
+            {
+            { xAxis.X, xAxis.Y, xAxis.Z, -DotProduct(xAxis, Position) },
+            { yAxis.X, yAxis.Y, yAxis.Z, -DotProduct(yAxis, Position) },
+            { zAxis.X, zAxis.Y, zAxis.Z, -DotProduct(zAxis, Position) },
+            { 0,       0,       0,       1 }
+        });
+        }
+
+        // Получение матрицы проекции (Projection Matrix)
+        public Matrix GetProjectionMatrix()
+        {
+            double f = 1.0 / Math.Tan(FieldOfView / 2.0);
+            return new Matrix(new[,]{
+            { f / AspectRatio, 0,  0,                                0 },
+            { 0,               f,  0,                                0 },
+            { 0,               0,  (FarPlane + NearPlane) / (NearPlane - FarPlane), (2 * FarPlane * NearPlane) / (NearPlane - FarPlane) },
+            { 0,               0, -1,                                0 }
+        });
+        }
+
+        // Вспомогательные методы
+        private static Vertex Normalize(Vertex v)
+        {
+            double length = Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+            return new Vertex(v.X / length, v.Y / length, v.Z / length);
+        }
+
+        private static Vertex CrossProduct(Vertex a, Vertex b)
+        {
+            return new Vertex(
+                a.Y * b.Z - a.Z * b.Y,
+                a.Z * b.X - a.X * b.Z,
+                a.X * b.Y - a.Y * b.X
+            );
+        }
+
+        //Скалярное произведение
+        private static double DotProduct(Vertex a, Vertex b)
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+
+
+    }
+
+}
+
+
+//Face.cs
+using Lab6;
+using System.Collections.Generic;
+
+namespace Lab8
+{
+    public class Face
+    {
+
+        public List<Vertex> Vertices { get; private set; }
+        public List<Vertex> Normales{get; set;}
+
+        public Face(List<Vertex> vertices)
+        {
+            Vertices = vertices;
+            Normales = new List<Vertex>();
+        }
+
+
+    }
+
+
+
+}
+
+//Normale.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    public class Normale
+    {
+        public double NX { get; set; } //Нормаль по X
+        public double NY { get; set; } //Нормаль по Y
+        public double NZ { get; set; } //Нормаль по Z
+        Normale(double nx, double ny, double nz) 
+        {
+
+            NX = nx;
+            NY = ny;
+            NZ = nz;
+
+        }
+
+    }
+}
+
+
