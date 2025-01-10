@@ -1,0 +1,10 @@
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\bin\Debug\Ray.exe.config
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\bin\Debug\Ray.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\bin\Debug\Ray.pdb
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.csproj.AssemblyReference.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.csproj.SuggestedBindingRedirects.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.Properties.Resources.resources
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.csproj.GenerateResource.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.csproj.CoreCompileInputs.cache
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.exe
+D:\Programming2024\Computer Graphics\GitComputerGraphics\Ray\obj\Debug\Ray.pdb

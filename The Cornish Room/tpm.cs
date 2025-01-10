@@ -6,10 +6,8 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
-//1264
-//1275
-//1277
 namespace Lab8
 {
     public partial class Afins3D : Form
@@ -17,13 +15,13 @@ namespace Lab8
         private static int _spin = 0;
         fileaction f = new fileaction();
         private Polyhedron _polyhedron;
+        private Polyhedron _polyhedron2;
         double d = 5;
         Projection projectionFunction = new Projection();
         private double _cameraAngle = 0;
-        ZBufferRenderer renderer;
         private Camera _camera = new Camera
         {
-            Position = new Vertex(1, 1, 0.1), // Камера расположена в пространстве
+            Position = new Vertex(0, 1, 1), // Камера расположена в пространстве
             Target = new Vertex(0, 0, 0),   // Камера смотрит на центр объекта
             FieldOfView = Math.PI / 4,      // Угол обзора
             AspectRatio = 16.0 / 9.0,       // Соотношение сторон экрана
@@ -31,7 +29,9 @@ namespace Lab8
             FarPlane = 200.0
         };
 
-
+        // Центр PictureBox
+        static int centerX;
+        static int centerY;
 
         int _fi;
         double _l;
@@ -48,12 +48,64 @@ namespace Lab8
         private double _initscaleX, _initscaleY, _initscaleZ;
         private double _initrotationX, _initrotationY, _initrotationZ;
 
+
+        RayTracer rayTracer;// Поле для Ray Tracer
+        private PointLight light; // Точечный источник света
+
+        List<SceneObject> sceneObjects = new List<SceneObject>
+        {
+        // Комната (куб)
+        new SceneObject
+        {
+            Polyhedron = Polyhedron.Tetrahedron(50), // Комната размером 10x10x10
+            TranslationX = 5,            // Центр комнаты в начале координат
+            TranslationY = 5,
+            TranslationZ = 5,
+            RotationX = 2,
+            RotationY = 2,
+            RotationZ = 2,
+            ScaleX = 1,
+            ScaleY = 1,
+            ScaleZ = 1,
+            Color = Color.Red,
+
+        },
+        // Объект внутри комнаты (например, сфера или куб)
+        new SceneObject
+        {
+            Polyhedron = Polyhedron.Tetrahedron(40), // Пример объекта (тетраэдр)
+            TranslationX = 2,                     // Объект в центре комнаты
+            TranslationY = 2,
+            TranslationZ = 2,
+            RotationX = 0,
+            RotationY = 0,
+            RotationZ = 0,
+            ScaleX = 0.5,                         // Масштабируем объект
+            ScaleY = 0.5,
+            ScaleZ = 0.5,
+            Color = Color.Beige,
+        }
+        };
+        
+
+    
+
         public Afins3D()
         {
             InitializeComponent();
             Initialize();
             projectionFunction.setProjection(Projection.enumprojection.perspective);
-           
+
+            light = new PointLight
+            {
+                Position = new Vertex(0, 5, 0),
+                Color = Color.White,
+                Intensity = 1.0
+            };
+
+            // Инициализация Ray Tracer
+            rayTracer = new RayTracer(sceneObjects, light);
+
 
             //pictureBox1.MouseMove += Form_MouseMove;
         }
@@ -65,13 +117,25 @@ namespace Lab8
        
         private void Initialize()
         {
-            _translationX = 0; _translationY = 0; _translationZ = 0;
-            _scaleX = 1; _scaleY = 1; _scaleZ = 1;
-            _rotationX = 0; _rotationY = 0; _rotationZ = 0;
+            // Центр PictureBox
+            centerX = pictureBox1.Width / 2;
+            centerY = pictureBox1.Height / 2;
 
-            _inittranslationX = 0; _inittranslationY = 0; _inittranslationZ = 0;
-            _initscaleX = 1; _initscaleY = 1; _initscaleZ = 1;
-            _initrotationX = 0; _initrotationY = 0; _initrotationZ = 0;
+            //_translationX = 0; _translationY = 0; _translationZ = 0;
+            //_scaleX = 1; _scaleY = 1; _scaleZ = 1;
+            //_rotationX = 0; _rotationY = 0; _rotationZ = 0;
+
+            //_inittranslationX = 0; _inittranslationY = 0; _inittranslationZ = 0;
+            //_initscaleX = 1; _initscaleY = 1; _initscaleZ = 1;
+            //_initrotationX = 0; _initrotationY = 0; _initrotationZ = 0;
+
+
+            //sceneObjects[0].TranslationX += centerX;
+            //sceneObjects[0].TranslationY += centerY;
+
+            //sceneObjects[1].TranslationX += centerX - 100;
+            //sceneObjects[1].TranslationY += centerY - 100;
+            //sceneObjects[1].TranslationZ = -5;
 
             _reflection =  new Matrix( new double[,]
             {
@@ -118,147 +182,62 @@ namespace Lab8
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            if (_polyhedron == null)
-                return;
 
-            _inittranslationX += _translationX;
-            _inittranslationY += _translationY;
-            _inittranslationZ += _translationZ;
-            _initscaleX += _scaleX;
-            _initscaleY += _scaleY;
-            _initscaleZ += _scaleZ;
-            _initrotationX += _rotationX;
-            _initrotationY += _rotationY;
-            _initrotationZ += _rotationZ;
+            sceneObjects[0].CheckObjectGeometry();
+            Console.WriteLine($"Object Center: ({sceneObjects[0].TranslationX}, {sceneObjects[0].TranslationY}, {sceneObjects[0].TranslationZ})");
 
-            var viewMatrix = _camera.GetViewMatrix();
-            var projectionMatrix = _camera.GetProjectionMatrix();
+            Console.WriteLine($"Camera Position: {_camera.Position}");
 
-            var transformationMatrix = TranslationMatrix(_inittranslationX, _inittranslationY, _inittranslationZ) *
-                                       ScalingMatrix(_initscaleX, _initscaleY, _initscaleZ) *
-                                       RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
 
-            int clientWidth = e.ClipRectangle.Width;
-            int clientHeight = e.ClipRectangle.Height;
+            Vertex rayDirection2 = CalculateRayDirection(0, 0);
+            Console.WriteLine($"Top-left ray direction: ({rayDirection2.X}, {rayDirection2.Y}, {rayDirection2.Z})");
 
-            int offsetX = clientWidth / 2;
-            int offsetY = clientHeight / 2;
+            rayDirection2 = CalculateRayDirection(pictureBox1.Width - 1, pictureBox1.Height - 1);
+            Console.WriteLine($"Bottom-right ray direction: ({rayDirection2.X}, {rayDirection2.Y}, {rayDirection2.Z})");
 
-            foreach (var face in _polyhedron.Faces)
+            // Создаем Bitmap для отрисовки
+            Bitmap renderBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+
+            RayTracer rayTracer = new RayTracer(sceneObjects, light);
+
+            // Расчет освещения с использованием RayTracer
+            for (int y = 0; y < pictureBox1.Height; y++)
             {
-                var points2D = new List<Point>();
-                foreach (var vertex in face.Vertices)
+                for (int x = 0; x < pictureBox1.Width; x++)
                 {
-                    // Трансформация вершины
-                    var transformedVertex = Transformer.TransformToWorld(vertex, transformationMatrix * viewMatrix * projectionMatrix, projectionFunction);
 
-                    Console.WriteLine($"Before normalization: X={transformedVertex.X}, Y={transformedVertex.Y}, Z={transformedVertex.Z}, W={transformedVertex.W}");
-                    // Нормализация в экранные координаты
-                    double w = transformedVertex.W;
-                    double x = transformedVertex.X / w;
-                    double y = transformedVertex.Y / w;
-                    
-                    // Преобразование в пиксельные координаты
-                    points2D.Add(new Point(
-                        (int)(x * offsetX + offsetX),
-                        (int)(y * offsetY + offsetY)
-                    ));
-                }
 
-                // Отрисовка полигона
-                if (points2D.Count >= 3)
-                {
-                    e.Graphics.DrawPolygon(Pens.Black, points2D.ToArray());
+                    Vertex rayOrigin = _camera.Position;
+                    Vertex rayDirection = CalculateRayDirection(x, y);
+
+                    Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection, _camera);
+
+                    // Устанавливаем цвет пикселя на Bitmap
+                    renderBitmap.SetPixel(x, y, pixelColor);
+
                 }
             }
 
+            // Отрисовка результата на экран
+            e.Graphics.DrawImage(renderBitmap, 0, 0);
 
-
-
-            //BEGIN---------------------------ZBUFFER
-            //if (renderer == null) 
-            //{
-            //    renderer = new ZBufferRenderer(e.ClipRectangle.Width, e.ClipRectangle.Height, projectionFunction);
-            //}
-
-           
-
-            //Matrix transformationMatrix = TranslationMatrix(_inittranslationX, _inittranslationY, _inittranslationZ) *
-            //                              ScalingMatrix(_initscaleX , _initscaleY , _initscaleZ) *
-            //                              RotationMatrix(_initrotationX, _initrotationY , _initrotationZ);
-
-            //// Рендерим все грани
-            //foreach (var face in _polyhedron.Faces)
-            //{
-            //    renderer.RenderFace(face, transformationMatrix, Pens.Black);
-            //    renderer.DrawToGraphics(e.Graphics);
-            //}
-
-            //renderer.ClearBuffer();
-
-
-
-            //Направление обзора
-            //var viewDirection = new Vertex(1, 0, -1);
-
-
-            ////END--------------------------- ZBUFFER
-
-
-            //Matrix translationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ);
-            //Matrix scalingMatrix = ScalingMatrix(_scaleX, _scaleY, _scaleZ);
-            //Matrix rotationMatrix = RotationMatrix(_rotationX, _rotationY, _rotationZ);
-            //Matrix lrotation = LRotation(_fi, _l, _m, _n);
-            //Vertex centroid = _polyhedron.Centroid(_polyhedron.LocalToWorld);
-
-            //Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
-            //Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-
-            //// Матрица преобразования (только поворот и масштабирование, без переноса)
-            //Matrix trasformationMatrixWithoutTranslation = RotationMatrix(_rotationX, _rotationX, _rotationZ) * ScalingMatrix(_scaleX, _scaleY, _scaleZ);
-            //Matrix worldMatrix;
-            //if (!IsCentroid)
-            //{
-            //    IsCentroid = true;
-            //    worldMatrix = translationMatrix * scalingMatrix * rotationMatrix * lrotation * _reflection;
-            //}
-            //else
-            //{
-            //    worldMatrix = toCenter * translationMatrix * scalingMatrix * rotationMatrix * lrotation * _reflection * fromCenter;
-            //}
-            //_polyhedron.LocalToWorld *= worldMatrix;
-
-            //int clientWidth = e.ClipRectangle.Width;
-            //int clientHeight = e.ClipRectangle.Height;
-
-            //int offsetX = clientWidth / 2;
-            //int offsetY = clientHeight / 2;
-
-            //centroid = _polyhedron.Centroid(_polyhedron.LocalToWorld);
-            //e.Graphics.FillRectangle(Brushes.Red, (int)centroid.X + offsetX, (int)centroid.Y + offsetY, 2, 2);
-
-            //var points2D = new List<Point>(10);
-
-            //// Выполняем отсечение
-            //Polyhedron visibleFaces = BackfaceCulling(_polyhedron, viewDirection, trasformationMatrixWithoutTranslation);
-            //foreach (Face face in visibleFaces.Faces)
-            //{
-            //    foreach (Vertex vertex in face.Vertices)
-            //    {
-            //        Vertex worldVertex = Transformer.TransformToWorld(vertex, _polyhedron.LocalToWorld * projectionFunction.getProjection(), projectionFunction);
-            //        if (worldMatrix == null) throw new InvalidOperationException("Матрица преобразования некорректна.");
-            //        points2D.Add(new Point((int)worldVertex.X, (int)worldVertex.Y));
-            //    }
-
-            //    var centeredPoints = points2D.Select(p => new Point(p.X + offsetX, p.Y + offsetY)).ToArray();
-            //    if (centeredPoints.Length > 0)
-            //    {
-            //        e.Graphics.DrawPolygon(Pens.Black, centeredPoints);
-            //    }
-            //    points2D.Clear();
-            //}
         }
 
+
+        private Vertex CalculateRayDirection(int x, int y)
+        {
+            double fov = Math.PI / 4; // Угол обзора
+            double aspectRatio = (double)pictureBox1.Width / (double)pictureBox1.Height;
+
+            double px = (2 * ((x + 0.5) / (double)pictureBox1.Width) - 1) * Math.Tan(fov / 2) * aspectRatio;
+            double py = (1 - 2 * ((y + 0.5) / (double)pictureBox1.Height)) * Math.Tan(fov / 2);
+
+            Vertex dir = new Vertex(px, py, -1).Normalize();
+            //------Console.WriteLine($"Ray Direction3: ({dir.X}, {dir.Y}, {dir.Z})");
+
+            return dir; // Направление луча
+           
+        }
         public bool IsCentroid { get; private set; }
 
 
@@ -361,7 +340,7 @@ namespace Lab8
             switch (comboBox1.Text)
             {
                 case "Тетраэдр":
-                    _polyhedron = Polyhedron.Tetrahedron();
+                    _polyhedron = Polyhedron.Tetrahedron(40);
                     pictureBox1.Invalidate();
                     break;
                 case "Гексаэдр":
@@ -388,9 +367,16 @@ namespace Lab8
 
         private void button2_Click(object sender, EventArgs e)
         {
-            _translationX = Convert.ToDouble(dxBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
-            _translationY = Convert.ToDouble(dyBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
-            _translationZ = Convert.ToDouble(dzBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
+            double _transX = Convert.ToDouble(dxBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
+            double _transY = Convert.ToDouble(dyBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
+            double _transZ = Convert.ToDouble(dzBox.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
+
+
+            sceneObjects[0].TranslationX += _transX;
+            sceneObjects[0].TranslationY += _transY;
+            sceneObjects[0].TranslationZ += _transZ;
+
+
 
             pictureBox1.Invalidate();
         }
@@ -400,6 +386,10 @@ namespace Lab8
             var dxScale = Convert.ToDouble(textBox1.Text, new NumberFormatInfo() { NumberDecimalSeparator = "."});
             var dyScale = Convert.ToDouble(textBox2.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
             var dzScale = Convert.ToDouble(textBox3.Text, new NumberFormatInfo() { NumberDecimalSeparator = "." });
+
+            sceneObjects[0].ScaleX *=  dxScale;
+            sceneObjects[0].ScaleY *= dyScale;
+            sceneObjects[0].ScaleZ *= dzScale;
 
             _scaleX = dxScale;
             _scaleY = dyScale;
@@ -432,6 +422,19 @@ namespace Lab8
             pictureBox1.Invalidate();
         }
 
+        private void button9_Click(object sender, EventArgs e)
+        {
+            string file_name = "D:\\Programming2024\\Computer Graphics\\GitComputerGraphics\\The Cornish Room\\bin\\cubeq2.obj";
+            string file_name2 = "D:\\Programming2024\\Computer Graphics\\GitComputerGraphics\\The Cornish Room\\bin\\cubeq2.obj";
+
+            _polyhedron = f.LoadFromOBJ(file_name);
+            _polyhedron2 = f.LoadFromOBJ(file_name2);
+
+           
+            pictureBox1.Invalidate();
+        }
+
+
         private void ButtonLoad_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.Cancel) 
@@ -440,10 +443,12 @@ namespace Lab8
             }
             string filename = openFileDialog1.FileName;
             //string filetext = System.IO.File.ReadAllText(filename);
+            MessageBox.Show(filename);
             _polyhedron = f.LoadFromOBJ(filename);
+            _polyhedron2 = _polyhedron;
             pictureBox1.Invalidate();
             
-            //MessageBox.Show("asd");
+          
         }
 
         private void Save_Click(object sender, EventArgs e)
@@ -526,7 +531,6 @@ namespace Lab8
                     });
 
                     //reflMatr = MultiplyMarices(reflMatr, reflXYMatr);
-                    MessageBox.Show("Hy");
                     _reflection = _reflection * reflXYMatr;
 
                     pictureBox1.Invalidate();
@@ -596,16 +600,20 @@ namespace Lab8
                             _rotationX = Convert.ToInt32(rotationBox.Text);
                             _rotationY = 0;
                             _rotationZ = 0;
-                            break;
+                            
+                            sceneObjects.ForEach(q => { q.RotationX += Convert.ToInt32(rotationBox.Text); q.RotationY = 0; q.RotationZ = 0; });
+                        break;
                         case 1:
                             _rotationY = Convert.ToInt32(rotationBox.Text);
                             _rotationX = 0;
                             _rotationZ = 0;
+                            sceneObjects.ForEach(q=> { q.RotationY += Convert.ToInt32(rotationBox.Text);  q.RotationX = 0; q.RotationZ = 0; });
                             break;
                         case 2:
                             _rotationZ = Convert.ToInt32(rotationBox.Text);
                             _rotationX = 0;
                             _rotationY = 0;
+                            sceneObjects.ForEach(q => { q.RotationX = 0; q.RotationY = 0; q.RotationZ += Convert.ToInt32(rotationBox.Text); });
                             break;
 
 
@@ -667,12 +675,6 @@ namespace Lab8
             return new Polyhedron(visibleVertices.ToList(), visibleFaces);
         }
 
-
-
-
-        
-
-
     }
 
     public class Transformer
@@ -693,7 +695,7 @@ namespace Lab8
             }
 
             //return result;
-            return new Vertex(point[0, 0], point[0, 1], point[0, 2], w);
+            return new Vertex(point[0, 0] / w, point[0, 1] / w, point[0, 2]/ w, w);
         }
 
         public static Vertex TransformNormal(Vertex normal, Matrix transformationMatrix)
@@ -788,11 +790,15 @@ namespace Lab8
 
     }
 
+
+
 }
 
 
 
+
 //camera.cs
+
 using Lab8;
 using System;
 using System.Collections.Generic;
@@ -864,6 +870,7 @@ namespace Lab6
             );
         }
 
+        //Скалярное произведение
         private static double DotProduct(Vertex a, Vertex b)
         {
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
@@ -875,78 +882,99 @@ namespace Lab6
 
 }
 
-//vertex.cs
 
-using System;
+//camera.cs
+using Lab6;
+using System.Collections.Generic;
 
 namespace Lab8
 {
-    public class Vertex
+    public class Face
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
-        public double W { get; set; }
-       
 
+        public List<Vertex> Vertices { get; private set; }
+        public List<Vertex> Normales{get; set;}
 
-        public Vertex(double x, double y, double z, double w = 1)
+        public Face(List<Vertex> vertices)
         {
-            X = x;
-            Y = y;
-            Z = z;
-            W = w;
-           
-        }
-
-        public Vertex(Vertex a, Vertex b) 
-        {
-            a.X = X;
-            a.Y = Y;
-            a.Z = Z;
-
-        }
-
-        public Vertex(Vertex v) 
-        {
-            v.X = X;
-            v.Y = Y;
-            v.Z = Z;
+            Vertices = vertices;
+            Normales = new List<Vertex>();
         }
 
 
+    }
 
+}
 
-        public static Vertex operator +(Vertex v1, Vertex v2) 
+//matrix.cs
+namespace Lab8
+{
+    public class Matrix
+    {
+        private readonly double[,] _data;
+        private readonly int _rows;
+        private readonly int _cols;
+
+        public Matrix(double[,] data)
         {
-            return new Vertex(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
+            _data = data;
+            _rows = data.GetLength(0);
+            _cols = data.GetLength(1);
         }
+        public double this[int x, int y] => _data[x, y];
 
-        public static Vertex operator /(Vertex v, double scalar) 
+        public static Matrix operator* (Matrix a, Matrix b)
         {
-            if (scalar == 0)throw new DivideByZeroException("Деление на ноль!");
+            int rows = a._rows;
+            int cols = b._cols;
 
-            return new Vertex(v.X / scalar, v.Y / scalar, v.Z / scalar);
+            var result = new double[rows, cols];
+
+            for (var i = 0; i < rows; i++)
+            {
+                for (var j = 0; j < cols; j++)
+                {
+                    result[i, j] = 0;
+                    for (var k = 0; k < a._cols; k++)
+                    {
+                        result[i, j] += a._data[i, k] * b._data[k, j];
+                    }
+                }
+            }
+            return new Matrix(result);
         }
-
-        //public static Vertex operator/=(Vertex v, double scalar)
-        //{
-
-        //    if (scalar == 0) 
-        //    {
-        //        throw new DivideByZeroException("Деление на ноль! В школе не учился? :)");
-        //    }
-
-        //    v.X /= scalar;
-        //    v.Y /= scalar;
-        //    v.Z /= scalar;
-        //    return v;
-        //}
     }
 }
 
-//polyhedron.cs
 
+//normale.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    public class Normale
+    {
+        public double NX { get; set; } //Нормаль по X
+        public double NY { get; set; } //Нормаль по Y
+        public double NZ { get; set; } //Нормаль по Z
+        Normale(double nx, double ny, double nz) 
+        {
+
+            NX = nx;
+            NY = ny;
+            NZ = nz;
+
+        }
+
+    }
+}
+
+
+//polyhedron.cs
 using System;
 using System.Collections.Generic;
 
@@ -972,12 +1000,31 @@ namespace Lab8
             { 0, 0, 0, 1 }
         });
 
-        public static Polyhedron Tetrahedron()
+        public Vertex Centroid(Matrix matrix)
         {
-            var v1 = new Vertex(1 , 1 , 1 );
-            var v2 = new Vertex(1  , -1  , -1  );
-            var v3 = new Vertex(-1  , 1  , -1  );
-            var v4 = new Vertex(-1  , -1  , 1  ) ;
+            double centerX = 0; double centerY = 0; double centerZ = 0;
+            foreach (Vertex vertex in Vertices)
+            {
+                var v = Transformer.TransformToWorld(vertex, matrix, p);
+                centerX += v.X;
+                centerY += v.Y;
+                centerZ += v.Z;
+            }
+            int count = Vertices.Count;
+            centerX /= count;
+            centerY /= count;
+            centerZ /= count;
+
+            return new Vertex(centerX, centerY, centerZ);
+        }
+
+
+        public static Polyhedron Tetrahedron(int index_size)
+        {
+            var v1 = new Vertex(1 * index_size, 1 * index_size, 1 );
+            var v2 = new Vertex(1 * index_size  , -1 * index_size, -1  );
+            var v3 = new Vertex(-1 * index_size, 1 * index_size, -1  );
+            var v4 = new Vertex(-1 * index_size, -1 * index_size, 1  ) ;
 
             Face firstPol = new Face(new List<Vertex> { v1, v2, v3 });
             Face secondPol = new Face(new List<Vertex> { v1, v2, v4 });
@@ -985,6 +1032,34 @@ namespace Lab8
             Face fourthPol = new Face(new List<Vertex> {v2, v3, v4 });
 
             return new Polyhedron(new List<Vertex> { v1, v2, v3, v4 }, new List<Face> {firstPol, secondPol, thirdPol, fourthPol });
+        }
+
+        public static Polyhedron CreateRoom(double size)
+        {
+            double halfSize = size / 2;
+            var vertices = new List<Vertex>
+        {
+            new Vertex(-halfSize, -halfSize, -halfSize), // 0
+            new Vertex(halfSize, -halfSize, -halfSize),  // 1
+            new Vertex(-halfSize, halfSize, -halfSize),  // 2
+            new Vertex(halfSize, halfSize, -halfSize),   // 3
+            new Vertex(-halfSize, -halfSize, halfSize),  // 4
+            new Vertex(halfSize, -halfSize, halfSize),   // 5
+            new Vertex(-halfSize, halfSize, halfSize),   // 6
+            new Vertex(halfSize, halfSize, halfSize)     // 7
+        };
+
+                var faces = new List<Face>
+        {
+            //new Face(new List<Vertex> { vertices[0], vertices[1], vertices[3], vertices[2] }), // Задняя грань
+            new Face(new List<Vertex> { vertices[4], vertices[5], vertices[7], vertices[6] }), // Передняя грань
+            new Face(new List<Vertex> { vertices[0], vertices[1], vertices[5], vertices[4] }), // Нижняя грань
+            new Face(new List<Vertex> { vertices[2], vertices[3], vertices[7], vertices[6] }), // Верхняя грань
+            new Face(new List<Vertex> { vertices[0], vertices[2], vertices[6], vertices[4] }), // Левая грань
+            new Face(new List<Vertex> { vertices[1], vertices[3], vertices[7], vertices[5] })  // Правая грань
+        };
+
+            return new Polyhedron(vertices, faces);
         }
 
         public static Polyhedron Hexahedron()
@@ -1134,200 +1209,442 @@ namespace Lab8
             return new Polyhedron(vertices, faces);
         }
 
-        public Vertex Centroid(Matrix matrix)
-        {
-            double centerX = 0; double centerY = 0; double centerZ = 0;
-            foreach (Vertex vertex in Vertices)
-            {
-                var v = Transformer.TransformToWorld(vertex, matrix, p);
-                centerX += v.X;
-                centerY += v.Y;
-                centerZ += v.Z;
-            }
-            int count = Vertices.Count;
-            centerX /= count;
-            centerY /= count;
-            centerZ /= count;
 
-            return new Vertex(centerX, centerY, centerZ);
-        }
     }
 }
 
-//Matrix.cs
-namespace Lab8
-{
-    public class Matrix
-    {
-        private readonly double[,] _data;
-        private readonly int _rows;
-        private readonly int _cols;
-
-        public Matrix(double[,] data)
-        {
-            _data = data;
-            _rows = data.GetLength(0);
-            _cols = data.GetLength(1);
-        }
-        public double this[int x, int y] => _data[x, y];
-
-        public static Matrix operator* (Matrix a, Matrix b)
-        {
-            int rows = a._rows;
-            int cols = b._cols;
-
-            var result = new double[rows, cols];
-
-            for (var i = 0; i < rows; i++)
-            {
-                for (var j = 0; j < cols; j++)
-                {
-                    result[i, j] = 0;
-                    for (var k = 0; k < a._cols; k++)
-                    {
-                        result[i, j] += a._data[i, k] * b._data[k, j];
-                    }
-                }
-            }
-            return new Matrix(result);
-        }
-    }
-}
-
-
-//fileaction.cs
-
+//RayTracer.cs
 using Lab8;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace Lab8
+namespace Lab6
 {
-    internal class fileaction
+    internal class RayTracer
     {
 
-        public Polyhedron LoadFromOBJ(string filePath)
+
+        private List<SceneObject> sceneObjects;
+        private PointLight light;
+
+        public RayTracer(List<SceneObject> objects, PointLight light)
         {
-            List<Vertex> vertices = new List<Vertex>();
-            List<Face> faces = new List<Face>();
-            List<Vertex> normales = new List<Vertex>();
-            
-            foreach (var line in File.ReadLines(filePath))
+            this.sceneObjects = objects;
+            this.light = light;
+        }
+
+        // Метод для выпуска луча и расчета цвета пикселя
+        public Color TraceRay(Vertex rayOrigin, Vertex rayDirection, Camera camera)
+        {
+            // Поиск ближайшего пересечения
+            SceneObject closestObject = null;
+            double closestDistance = double.MaxValue;
+            Vertex intersectionPoint = null;
+
+
+
+
+            foreach (var obj in sceneObjects)
             {
-                if (line.StartsWith("v "))
+                var intersection = obj.Intersect(rayOrigin, rayDirection, camera);
+                if(intersection != null) Console.WriteLine($"Intersection found with object: {obj.Color} at distance {intersection.Distance}");
+                if (intersection != null && intersection.Distance < closestDistance)
                 {
-                    var parts = line.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries);
-                    double x = double.Parse(parts[1], CultureInfo.InvariantCulture);
-                    double y = double.Parse(parts[2], CultureInfo.InvariantCulture);
-                    double z = double.Parse(parts[3], CultureInfo.InvariantCulture);
-                    vertices.Add(new Vertex(x, y, z));
+
+                    
+
+                    closestDistance = intersection.Distance;
+                    closestObject = obj;
+                    intersectionPoint = intersection.Point;
                 }
+            }
 
-                else if (line.StartsWith("vn "))
+
+            // Если луч не пересекает объекты, возвращаем фоновый цвет
+            if (closestObject == null) 
+            {
+                //Console.WriteLine($"No intersection. Returning background color.");
+                return Color.Black;
+            }
+
+            //Console.WriteLine($"Intersection with object of color {closestObject.Color}");
+
+
+            // Расчет освещения
+            return CalculateLighting(intersectionPoint, closestObject, camera);
+        }
+
+        private bool IsInShadow(Vertex point, SceneObject currentObject, Camera camera)
+        {
+            Vertex lightDirection = (light.Position - point).Normalize();
+
+            foreach (var obj in sceneObjects)
+            {
+                if (obj != currentObject)
                 {
-                    var normalesParts = line.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries);
-                    double nx = double.Parse(normalesParts[1], CultureInfo.InvariantCulture);
-                    double ny = double.Parse(normalesParts[2], CultureInfo.InvariantCulture);
-                    double nz = double.Parse(normalesParts[3], CultureInfo.InvariantCulture);
-                    normales.Add(new Vertex(nx, ny, nz));
-                }
-
-                //else if (line.StartsWith("vt ")) 
-                //{
-                //    var texturesParts = line.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries);
-                //    double n1 = double.Parse(texturesParts[1], CultureInfo.InvariantCulture);
-                //    double n2 = double.Parse(texturesParts[2], CultureInfo.InvariantCulture);
-                //    double n3 = double.Parse(texturesParts[3], CultureInfo.InvariantCulture);
-                //    normales.Add(new Vertex(n1, n2, n3));
-                //}
-
-                else if (line.StartsWith("f "))
-                {
-                    var partsFace = line.Split(' ', (char)StringSplitOptions.RemoveEmptyEntries);
-
-                    var faceVetices = new List<Vertex>();
-                    var faceNormales = new List<Vertex>(); // для нормалей
-                    //foreach (var p in parts) 
-                    //{
-                    //    vv[i] = vertices[int.Parse(p)];
-                    //    i++;
-
-                    //}
-                  
-                    for (int j = 1; j < partsFace.Length; j++)
+                    var intersection = obj.Intersect(point, lightDirection, camera);
+                    if (intersection != null)
                     {
-                        var indices  = partsFace[j].Split('/', (char)StringSplitOptions.RemoveEmptyEntries);
-                        // Извлечение индекса вершины
-                        int vertexIndex = int.Parse(indices[0]) - 1;
-                        faceVetices.Add(vertices[vertexIndex]);
-
-                        //извлечение индекса нормали, если есть
-                        if (indices.Length > 1) 
-                        {
-                            faceNormales.Add(normales[int.Parse(indices[1]) - 1]);
-                        }
-                        //tempListVertex.Add(vertices[int.Parse(partsFace[j]) - 1]);
-                       
-
+                        return true; // Тень есть
                     }
-                    var face = new Face(faceVetices);
-                    if (faceNormales.Count > 0) face.Normales = faceNormales; // Добавляем нормали в грань
-                    faces.Add(face);
-
-
-                    // List<Face> faceVertices = parts.Skip(1).Select(index => vertices[int.Parse(index)]);
-                    //                                 //.Select(index => vertices[int.Parse(index) - 1])
-                    //                                 //.ToList();
-                    //faces.Add(new Face(faceVertices));
                 }
             }
-           
-            return new Polyhedron(vertices, faces);
+
+            return false; // Тени нет
         }
 
-        public void SaveToOBJ(Polyhedron polyhedron, string filePath)
+        private Color CalculateLighting(Vertex point, SceneObject obj, Camera camera)
         {
-            using (StreamWriter writer = new StreamWriter(filePath))
+            Vertex lightDirection = (light.Position - point).Normalize();
+            Vertex normal = obj.GetNormal(point);
+
+            // Диффузное освещение
+            double diffuse = Math.Max(0, Vertex.Dot(normal, lightDirection));
+
+            // Тени
+            if (IsInShadow(point, obj, camera))
             {
-                foreach (var vertex in polyhedron.Vertices)
-                {
-                    writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "v {0:0.###} {1:0.###} {2:0.###}", vertex.X, vertex.Y, vertex.Z));
-                    //writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "v {0:0.###} {1:0.###} {2:0.###}", vertex.NX, vertex.NY, vertex.NZ));
-
-                }
-
-                foreach (var face in polyhedron.Faces)
-                {
-                    var indices = face.Vertices.Select(v => polyhedron.Vertices.IndexOf(v) + 1);
-                    writer.WriteLine("f " + string.Join(" ", indices));
-                }
+                diffuse *= 0.2; // Уменьшаем интенсивность света в тени
             }
+            
+
+            // Цвет с учетом освещения
+            int r = (int)(obj.Color.R * diffuse * light.Intensity);
+            int g = (int)(obj.Color.G * diffuse * light.Intensity);
+            int b = (int)(obj.Color.B * diffuse * light.Intensity);
+
+            Console.WriteLine($"Lighting for point ({point.X}, {point.Y}, {point.Z}): {Color.FromArgb(r, g, b)}");
+
+            return Color.FromArgb(r, g, b);
         }
+
     }
 }
 
-//private void LoadFile_Click(object sender, EventArgs e)
-//{
-//    OpenFileDialog openFileDialog = new OpenFileDialog();
-//    if (openFileDialog.ShowDialog() == DialogResult.OK)
-//    {
-
-//        pop = LoadFromOBJ(openFileDialog.FileName);
-//        pnts = pop.Faces;
-//        pictureBox1.Invalidate();
-//    }
-//}
 
 
 
+//sceneobject.cs
+using Lab8;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Lab6
+{
+    internal class SceneObject
+    {
+        public Polyhedron Polyhedron { get; set; } // Геометрия объекта
+        public double TranslationX { get; set; }   // Перемещение по X
+        public double TranslationY { get; set; }   // Перемещение по Y
+        public double TranslationZ { get; set; }   // Перемещение по Z
+        public double RotationX { get; set; }      // Вращение вокруг X
+        public double RotationY { get; set; }      // Вращение вокруг Y
+        public double RotationZ { get; set; }      // Вращение вокруг Z
+        public double ScaleX { get; set; }         // Масштабирование по X
+        public double ScaleY { get; set; }         // Масштабирование по Y
+        public double ScaleZ { get; set; }         // Масштабирование по Z
+        public Color Color { get; set; }
 
 
-//    }
-//}
+        public IntersectionResult Intersect(Vertex rayOrigin, Vertex rayDirection, Camera camera)
+        {
+            IntersectionResult closestIntersection = null;
+            double closestDistance = double.MaxValue;
+
+            // Перебираем все грани куба
+            foreach (var face in Polyhedron.Faces)
+            {
+                // Получаем нормаль к грани
+                Vertex normal = GetFaceNormal(face, camera);
+                //------------Console.WriteLine($"Face Normal: ({normal.X}, {normal.Y}, {normal.Z})");
+
+                //Console.WriteLine($"Normal: ({normal.X}, {normal.Y}, {normal.Z})");
+                //Console.WriteLine($"Ray direction: ({rayDirection.X}, {rayDirection.Y}, {rayDirection.Z})");
+
+                // Инвертируем нормаль, если она направлена не в сторону камеры
+                if (Vertex.Dot(rayDirection, normal) > 0)
+                {
+                    normal = new Vertex(-normal.X, -normal.Y, -normal.Z);
+                }
+
+                // Вычисляем пересечение луча с плоскостью грани
+                double denominator = Vertex.Dot(normal, rayDirection);
+
+                //Console.WriteLine($"denominator is: {denominator}");
+                // Если луч параллелен грани, пересечения нет
+                if (Math.Abs(denominator) < 1e-6) 
+                {
+                    //------------Console.WriteLine("Ray is parallel to the plane");
+                    continue;
+                }
+                    
+
+                // Вычисляем расстояние до плоскости
+                Vertex pointOnPlane = face.Vertices[0]; // Любая точка на грани
+                double t = Vertex.Dot(pointOnPlane - rayOrigin, normal) / denominator;
+                //-------Console.WriteLine($"RayOrigin: ({rayOrigin.X}, {rayOrigin.Y}, {rayOrigin.Z}), RayDirection: ({rayDirection.X}, {rayDirection.Y}, {rayDirection.Z}), t = {t}");
+                // Если пересечение за лучом, игнорируем
+                if (t <= 1e-6)
+                    continue;
+
+                // Точка пересечения
+                Vertex intersectionPoint = rayOrigin + rayDirection * t;
+
+                bool isInside = IsPointInsideFace(intersectionPoint, face, camera);
+                //---------Console.WriteLine($"Intersection Point: ({intersectionPoint.X}, {intersectionPoint.Y}, {intersectionPoint.Z}), Is Inside: {isInside}");
+
+                // Проверяем, лежит ли точка внутри грани
+                if (IsPointInsideFace(intersectionPoint, face, camera))
+                {
+                    //Console.WriteLine($"Intersection found at distance {t}");
+                    // Если это ближайшее пересечение, сохраняем его
+                    if (t < closestDistance)
+                    {
+                        closestDistance = t;
+                        closestIntersection = new IntersectionResult
+                        {
+                            Point = intersectionPoint,
+                            Distance = t
+                        };
+                    }
+                }
+            }
+
+            if (closestIntersection == null)
+            {
+                //--------Console.WriteLine("No intersection found");
+            }
+            else
+            {
+                //----------Console.WriteLine($"Intersection found at distance {closestIntersection.Distance}");
+            }
+
+
+            return closestIntersection;
+        }
+
+        public void CheckObjectGeometry()
+        {
+            foreach (var face in Polyhedron.Faces)
+            {
+                Vertex v0 = face.Vertices[0];
+                Vertex v1 = face.Vertices[1];
+                Vertex v2 = face.Vertices[2];
+
+                Vertex edge1 = v1 - v0;
+                Vertex edge2 = v2 - v0;
+
+                Vertex normal = Vertex.Cross(edge1, edge2);
+                double length = Math.Sqrt(normal.X * normal.X + normal.Y * normal.Y + normal.Z * normal.Z);
+
+                if (length < 1e-6)
+                {
+                    //---------Console.WriteLine($"Degenerate face detected: v0=({v0.X}, {v0.Y}, {v0.Z}), v1=({v1.X}, {v1.Y}, {v1.Z}), v2=({v2.X}, {v2.Y}, {v2.Z})");
+                }
+            }
+        }
+
+        // Метод для вычисления нормали к грани
+        private Vertex GetFaceNormal(Face face, Camera _camera)
+        {
+            Vertex v0 = face.Vertices[0];
+            Vertex v1 = face.Vertices[1];
+            Vertex v2 = face.Vertices[2];
+
+            //Console.WriteLine($"Face vertices: v0=({v0.X}, {v0.Y}, {v0.Z}), v1=({v1.X}, {v1.Y}, {v1.Z}), v2=({v2.X}, {v2.Y}, {v2.Z})");
+
+            Vertex edge1 = v1 - v0;
+            Vertex edge2 = v2 - v0;
+
+            // Вычисляем векторное произведение
+            Vertex norml = Vertex.Cross(edge1, edge2);
+
+            // Проверяем, не является ли вектор нулевым
+            double length = Math.Sqrt(norml.X * norml.X + norml.Y * norml.Y + norml.Z * norml.Z);
+            if (length < 1e-6) // Пороговое значение для проверки нулевого вектора
+            {
+                // Возвращаем вектор по умолчанию или выбрасываем исключение
+                return new Vertex(0, 0, 1);
+                //throw new InvalidOperationException("Невозможно вычислить нормаль: ребра грани коллинеарны.");
+                // Или вернуть вектор по умолчанию:
+                // return new Vertex(0, 0, 1);
+            }
+
+            // Нормализуем вектор
+            norml = norml.Normalize();
+            //Console.WriteLine($"Computed normal: ({norml.X}, {norml.Y}, {norml.Z})");
+
+            // Проверяем направление нормали
+            Vertex centroid = (v0 + v1 + v2) / 3; // Центр грани
+            Vertex toCentroid = centroid - _camera.Position; // Вектор от камеры к центру грани
+
+            // Если нормаль направлена внутрь, инвертируем её
+            if (Vertex.Dot(norml, toCentroid) < 0)
+            {
+                norml = new Vertex(-norml.X, -norml.Y, -norml.Z);
+            }
+
+
+            return norml;
+        }
+
+        // Метод для проверки, лежит ли точка внутри грани
+        private bool IsPointInsideFace(Vertex point, Face face, Camera camera)
+        {
+            // Простейшая реализация: проверяем, лежит ли точка внутри выпуклого многоугольника
+            // (Этот метод можно улучшить для более сложных случаев)
+            Vertex normal = GetFaceNormal(face, camera);
+
+            for (int i = 0; i < face.Vertices.Count; i++)
+            {
+                Vertex v1 = face.Vertices[i];
+                Vertex v2 = face.Vertices[(i + 1) % face.Vertices.Count];
+
+                Vertex edge = v2 - v1;
+                Vertex toPoint = point - v1;
+
+                Vertex cross = Vertex.Cross(edge, toPoint);
+
+                if (Vertex.Dot(cross, normal) < 0)
+                    return false; // Точка находится за пределами грани
+            }
+
+            return true; // Точка внутри грани
+        }
+
+        public Vertex GetNormal(Vertex point)
+        {
+            // Нормаль к поверхности сферы
+            Vertex center = Polyhedron.Centroid(Polyhedron.LocalToWorld);
+            return (point - center).Normalize();
+        }
+    }
+
+        public class IntersectionResult
+        {
+            public Vertex Point { get; set; }
+            public double Distance { get; set; }
+        }
+
+
+
+}
+
+
+
+
+
+
+//vertex.cs
+
+using System;
+
+namespace Lab8
+{
+    public class Vertex
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; }
+        public double W { get; set; }
+       
+
+
+        public Vertex(double x, double y, double z, double w = 1)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+           
+        }
+
+        public Vertex(Vertex a, Vertex b) 
+        {
+            a.X = X;
+            a.Y = Y;
+            a.Z = Z;
+
+        }
+
+        public Vertex(Vertex v) 
+        {
+            v.X = X;
+            v.Y = Y;
+            v.Z = Z;
+        }
+
+        //��������� ������������
+        public static double Dot(Vertex a, Vertex b) 
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+
+        // ����� ��� ���������� ������������
+        public static Vertex Cross(Vertex a, Vertex b)
+        {
+            return new Vertex(
+                a.Y * b.Z - a.Z * b.Y, // X
+                a.Z * b.X - a.X * b.Z, // Y
+                a.X * b.Y - a.Y * b.X  // Z
+            );
+        }
+
+        // ����� ��� ������������ �������
+        public  Vertex Normalize()
+        {
+            double length = Math.Sqrt(X * X + Y * Y + Z * Z); // ����� �������
+
+            if (length == 0)
+                throw new InvalidOperationException("���������� ������������� ������� ������.");
+
+            // ���������� ����� ��������������� ������
+            return new Vertex(X / length, Y / length, Z / length);
+        }
+
+        public static Vertex operator *(Vertex v, double d) 
+        {
+
+            return new Vertex(v.X * d, v.Y * d, v.Z * d);
+        }
+
+        public static Vertex operator -(Vertex v1, Vertex v2) 
+        {
+            return new Vertex(v1.X - v2.X, v1.Y - v2.Y, v2.Z - v2.Z);
+        }
+        public static Vertex operator +(Vertex v1, Vertex v2) 
+        {
+            return new Vertex(v1.X + v2.X, v1.Y + v2.Y, v1.Z + v2.Z);
+        }
+
+        public static Vertex operator /(Vertex v, double scalar) 
+        {
+            if (scalar == 0)throw new DivideByZeroException("������� �� ����!");
+
+            return new Vertex(v.X / scalar, v.Y / scalar, v.Z / scalar);
+        }
+
+        //public static Vertex operator/=(Vertex v, double scalar)
+        //{
+
+        //    if (scalar == 0) 
+        //    {
+        //        throw new DivideByZeroException("������� �� ����! � ����� �� ������? :)");
+        //    }
+
+        //    v.X /= scalar;
+        //    v.Y /= scalar;
+        //    v.Z /= scalar;
+        //    return v;
+        //}
+    }
+}

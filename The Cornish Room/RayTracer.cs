@@ -22,33 +22,47 @@ namespace Lab6
         }
 
         // Метод для выпуска луча и расчета цвета пикселя
-        public Color TraceRay(Vertex rayOrigin, Vertex rayDirection)
+        public Color TraceRay(Vertex rayOrigin, Vertex rayDirection, Camera camera)
         {
             // Поиск ближайшего пересечения
             SceneObject closestObject = null;
             double closestDistance = double.MaxValue;
             Vertex intersectionPoint = null;
 
+
+
+
             foreach (var obj in sceneObjects)
             {
-                var intersection = obj.Intersect(rayOrigin, rayDirection);
+                var intersection = obj.Intersect(rayOrigin, rayDirection, camera);
+                if(intersection != null) Console.WriteLine($"Intersection found with object: {obj.Color} at distance {intersection.Distance}");
                 if (intersection != null && intersection.Distance < closestDistance)
                 {
+
+                    
+
                     closestDistance = intersection.Distance;
                     closestObject = obj;
                     intersectionPoint = intersection.Point;
                 }
             }
 
+
             // Если луч не пересекает объекты, возвращаем фоновый цвет
-            if (closestObject == null)
+            if (closestObject == null) 
+            {
+                //Console.WriteLine($"No intersection. Returning background color.");
                 return Color.Black;
+            }
+
+            //Console.WriteLine($"Intersection with object of color {closestObject.Color}");
+
 
             // Расчет освещения
-            return CalculateLighting(intersectionPoint, closestObject);
+            return CalculateLighting(intersectionPoint, closestObject, camera);
         }
 
-        private bool IsInShadow(Vertex point, SceneObject currentObject)
+        private bool IsInShadow(Vertex point, SceneObject currentObject, Camera camera)
         {
             Vertex lightDirection = (light.Position - point).Normalize();
 
@@ -56,7 +70,7 @@ namespace Lab6
             {
                 if (obj != currentObject)
                 {
-                    var intersection = obj.Intersect(point, lightDirection);
+                    var intersection = obj.Intersect(point, lightDirection, camera);
                     if (intersection != null)
                     {
                         return true; // Тень есть
@@ -67,7 +81,7 @@ namespace Lab6
             return false; // Тени нет
         }
 
-        private Color CalculateLighting(Vertex point, SceneObject obj)
+        private Color CalculateLighting(Vertex point, SceneObject obj, Camera camera)
         {
             Vertex lightDirection = (light.Position - point).Normalize();
             Vertex normal = obj.GetNormal(point);
@@ -76,15 +90,18 @@ namespace Lab6
             double diffuse = Math.Max(0, Vertex.Dot(normal, lightDirection));
 
             // Тени
-            if (IsInShadow(point, obj))
+            if (IsInShadow(point, obj, camera))
             {
                 diffuse *= 0.2; // Уменьшаем интенсивность света в тени
             }
+            
 
             // Цвет с учетом освещения
             int r = (int)(obj.Color.R * diffuse * light.Intensity);
             int g = (int)(obj.Color.G * diffuse * light.Intensity);
             int b = (int)(obj.Color.B * diffuse * light.Intensity);
+
+            Console.WriteLine($"Lighting for point ({point.X}, {point.Y}, {point.Z}): {Color.FromArgb(r, g, b)}");
 
             return Color.FromArgb(r, g, b);
         }

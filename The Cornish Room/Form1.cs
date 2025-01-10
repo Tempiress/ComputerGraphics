@@ -7,9 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
-//1264
-//1275
-//1277
 namespace Lab8
 {
     public partial class Afins3D : Form
@@ -21,11 +18,10 @@ namespace Lab8
         double d = 5;
         Projection projectionFunction = new Projection();
         private double _cameraAngle = 0;
-        ZBufferRenderer renderer;
         private Camera _camera = new Camera
         {
-            Position = new Vertex(1, 1, 10), // Камера расположена в пространстве
-            Target = new Vertex(0, 0, 0),   // Камера смотрит на центр объекта
+            Position = new Vertex(0, 1, 1), // Камера расположена в пространстве
+            Target = new Vertex(0, 0, 5),   // Камера смотрит на центр объекта
             FieldOfView = Math.PI / 4,      // Угол обзора
             AspectRatio = 16.0 / 9.0,       // Соотношение сторон экрана
             NearPlane = 0.1,
@@ -54,66 +50,39 @@ namespace Lab8
 
         RayTracer rayTracer;// Поле для Ray Tracer
         private PointLight light; // Точечный источник света
-        //List<SceneObject> sceneObjects = new List<SceneObject>
-        //{
-        //new SceneObject
-        //{
-        //    Polyhedron = Polyhedron.Tetrahedron(),
-        //    TranslationX = 0,
-        //    TranslationY = 0,
-        //    TranslationZ = 0,
-        //    RotationX = 0,
-        //    RotationY = 0,
-        //    RotationZ = 0,
-        //    ScaleX = 1,
-        //    ScaleY = 1,
-        //    ScaleZ = 1
-        //},
-        //new SceneObject
-        //{
-        //    Polyhedron = Polyhedron.Hexahedron(),
-        //    TranslationX = 5,
-        //    TranslationY = 0,
-        //    TranslationZ = 0,
-        //    RotationX = 45,
-        //    RotationY = 0,
-        //    RotationZ = 0,
-        //    ScaleX = 1,
-        //    ScaleY = 1,
-        //    ScaleZ = 1
-        //}\
-
 
         List<SceneObject> sceneObjects = new List<SceneObject>
         {
         // Комната (куб)
         new SceneObject
         {
-            Polyhedron = Polyhedron.CreateRoom(450), // Комната размером 10x10x10
-            TranslationX = 3,            // Центр комнаты в начале координат
-            TranslationY = 3,
-            TranslationZ = 3,
-            RotationX = 0,
-            RotationY = 0,
-            RotationZ = 0,
+            Polyhedron = Polyhedron.Tetrahedron(90), // Комната размером 10x10x10
+            TranslationX = 5,            // Центр комнаты в начале координат
+            TranslationY = 5,
+            TranslationZ = 5,
+            RotationX = 2,
+            RotationY = 2,
+            RotationZ = 2,
             ScaleX = 1,
             ScaleY = 1,
             ScaleZ = 1,
+            Color = Color.Red,
 
         },
         // Объект внутри комнаты (например, сфера или куб)
         new SceneObject
         {
             Polyhedron = Polyhedron.Tetrahedron(40), // Пример объекта (тетраэдр)
-            TranslationX = 3,                     // Объект в центре комнаты
-            TranslationY = 3,
-            TranslationZ = 3,
+            TranslationX = 2,                     // Объект в центре комнаты
+            TranslationY = 2,
+            TranslationZ = 2,
             RotationX = 0,
             RotationY = 0,
             RotationZ = 0,
             ScaleX = 0.5,                         // Масштабируем объект
             ScaleY = 0.5,
             ScaleZ = 0.5,
+            Color = Color.Beige,
         }
         };
         
@@ -151,6 +120,13 @@ namespace Lab8
             centerX = pictureBox1.Width / 2;
             centerY = pictureBox1.Height / 2;
 
+
+            // Отладочный вывод для объектов сцены
+            foreach (var obj in sceneObjects)
+            {
+                Console.WriteLine($"Object position: ({obj.TranslationX}, {obj.TranslationY}, {obj.TranslationZ})");
+            }
+
             //_translationX = 0; _translationY = 0; _translationZ = 0;
             //_scaleX = 1; _scaleY = 1; _scaleZ = 1;
             //_rotationX = 0; _rotationY = 0; _rotationZ = 0;
@@ -160,12 +136,12 @@ namespace Lab8
             //_initrotationX = 0; _initrotationY = 0; _initrotationZ = 0;
 
 
-            sceneObjects[0].TranslationX += centerX;
-            sceneObjects[0].TranslationY += centerY;
+            //sceneObjects[0].TranslationX += centerX;
+            //sceneObjects[0].TranslationY += centerY;
 
-            sceneObjects[1].TranslationX += centerX - 100;
-            sceneObjects[1].TranslationY += centerY - 100;
-            sceneObjects[1].TranslationZ = -5;
+            //sceneObjects[1].TranslationX += centerX - 100;
+            //sceneObjects[1].TranslationY += centerY - 100;
+            //sceneObjects[1].TranslationZ = -5;
 
             _reflection =  new Matrix( new double[,]
             {
@@ -213,287 +189,66 @@ namespace Lab8
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
 
-            if (renderer == null)
+            sceneObjects[0].CheckObjectGeometry();
+            Console.WriteLine($"Object Center: ({sceneObjects[0].TranslationX}, {sceneObjects[0].TranslationY}, {sceneObjects[0].TranslationZ})");
+
+            Console.WriteLine($"Camera Position: {_camera.Position}");
+
+
+            Vertex rayDirection2 = CalculateRayDirection(0, 0);
+            Console.WriteLine($"Top-left ray direction: ({rayDirection2.X}, {rayDirection2.Y}, {rayDirection2.Z})");
+
+            rayDirection2 = CalculateRayDirection(pictureBox1.Width - 1, pictureBox1.Height - 1);
+            Console.WriteLine($"Bottom-right ray direction: ({rayDirection2.X}, {rayDirection2.Y}, {rayDirection2.Z})");
+
+            // Создаем Bitmap для отрисовки
+            Bitmap renderBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+
+            RayTracer rayTracer = new RayTracer(sceneObjects, light);
+
+            // Расчет освещения с использованием RayTracer
+            for (int y = 0; y < pictureBox1.Height; y++)
             {
-                renderer = new ZBufferRenderer(pictureBox1.Width, pictureBox1.Height, projectionFunction);
-            }
-
-            // Очистка Z-буфера
-            renderer.ClearBuffer();
-
-            // Рендеринг всех объектов
-            foreach (var sceneObject in sceneObjects)
-            {
-                Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
-
-                Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
-                Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY, sceneObject.RotationZ) *
-                                              ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.ScaleZ);
-                Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-                Matrix translationMatrix = TranslationMatrix(sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
-
-                Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
-
-                // Рендеринг каждой грани объекта
-                foreach (var face in sceneObject.Polyhedron.Faces)
+                for (int x = 0; x < pictureBox1.Width; x++)
                 {
-                    // Используем RayTracer для расчета цвета
-                    Vertex rayOrigin = _camera.Position;
-                    Vertex rayDirection = CalculateRayDirection(/* координаты грани */);
 
-                    Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-                    renderer.RenderFace(face, finalTransformationMatrix, new Pen(pixelColor));
+
+                    Vertex rayOrigin = _camera.Position;
+                    Vertex rayDirection = CalculateRayDirection(x, y);
+
+                    Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection, _camera);
+
+                    // Устанавливаем цвет пикселя на Bitmap
+                    renderBitmap.SetPixel(x, y, pixelColor);
+
                 }
             }
 
-            // Отрисовка результата на PictureBox
-            renderer.DrawToGraphics(e.Graphics);
+            // Отрисовка результата на экран
+            e.Graphics.DrawImage(renderBitmap, 0, 0);
 
-
-
-
-
-
-
-            // Создаем Ray Tracer (если он еще не создан)
-            //if (rayTracer == null)
-            //{
-            //    rayTracer = new RayTracer(sceneObjects, light);
-            //}
-
-            //// Создаем Bitmap для рендеринга
-            //Bitmap bitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-
-            //// Рендеринг сцены
-            //for (int y = 0; y < bitmap.Height; y++)
-            //{
-            //    for (int x = 0; x < bitmap.Width; x++)
-            //    {
-            //        Vertex rayOrigin = _camera.Position;
-            //        Vertex rayDirection = CalculateRayDirection(x, y);
-
-            //        Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-            //        bitmap.SetPixel(x, y, pixelColor);
-            //    }
-            //}
-            //// Отображаем Bitmap на PictureBox
-            //e.Graphics.DrawImage(bitmap, 0, 0);
-            // Очистка PictureBox (если нужно)
-            //e.Graphics.Clear(Color.Black);
-
-            //// Рендеринг сцены
-            //for (int y = 0; y < pictureBox1.Height; y++)
-            //{
-            //    for (int x = 0; x < pictureBox1.Width; x++)
-            //    {
-            //        // Выпускаем луч из камеры через пиксель (x, y)
-            //        Vertex rayOrigin = _camera.Position;
-            //        Vertex rayDirection = CalculateRayDirection(x, y);
-
-            //        // Трассируем луч и получаем цвет пикселя
-            //        Color pixelColor = rayTracer.TraceRay(rayOrigin, rayDirection);
-
-            //        // Рисуем пиксель на PictureBox
-            //        using (var brush = new SolidBrush(pixelColor))
-            //        {
-            //            e.Graphics.FillRectangle(brush, x, y, 1, 1);
-            //        }
-            //    }
-            //}
-
-
-
-
-
-
-
-
-
-            //if (_polyhedron == null)
-            //    return;
-
-            //_inittranslationX += _translationX;
-            //_inittranslationY += _translationY;
-            //_inittranslationZ += _translationZ;
-            //_initscaleX *= _scaleX;
-            //_initscaleY *= _scaleY;
-            //_initscaleZ *= _scaleZ;
-            //_initrotationX += _rotationX;
-            //_initrotationY += _rotationY;
-            //_initrotationZ += _rotationZ;
-
-            //var viewMatrix = _camera.GetViewMatrix();
-            //var projectionMatrix = _camera.GetProjectionMatrix();
-
-            //var transformationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ) *
-            //                           ScalingMatrix(_scaleX, _scaleY, _scaleZ) *
-            //                           RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
-
-            //int clientWidth = e.ClipRectangle.Width;
-            //int clientHeight = e.ClipRectangle.Height;
-
-            //int offsetX = clientWidth / 2;
-            //int offsetY = clientHeight / 2;
-
-            //foreach (var face in _polyhedron.Faces)
-            //{
-            //    var points2D = new List<Point>();
-            //    foreach (var vertex in face.Vertices)
-            //    {
-            //        // Трансформация вершины
-            //        var transformedVertex = Transformer.TransformToWorld(vertex, transformationMatrix * viewMatrix * projectionMatrix, projectionFunction);
-
-            //        Console.WriteLine($"Before normalization: X={transformedVertex.X}, Y={transformedVertex.Y}, Z={transformedVertex.Z}, W={transformedVertex.W}");
-            //        // Нормализация в экранные координаты
-            //        //double w = transformedVertex.W;
-            //        //double x = transformedVertex.X / w;
-            //        //double y = transformedVertex.Y / w;
-
-            //        // Преобразование в пиксельные координаты
-            //        points2D.Add(new Point(
-            //            (int)(transformedVertex.X * offsetX + offsetX),
-            //            (int)(transformedVertex.Y * offsetY + offsetY)
-            //        ));
-            //    }
-
-            //    // Отрисовка полигона
-            //    if (points2D.Count >= 3)
-            //    {
-            //        e.Graphics.DrawPolygon(Pens.Black, points2D.ToArray());
-            //    }
-            //}
-
-
-
-
-            //BEGIN---------------------------ZBUFFER
-            //if (renderer == null)
-            //{
-            //    renderer = new ZBufferRenderer(e.ClipRectangle.Width, e.ClipRectangle.Height, projectionFunction);
-            //}
-            ////finalTransformationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ) *
-            ////                                  ScalingMatrix(_scaleX, _scaleY, _scaleZ) *
-            ////                                  RotationMatrix(_initrotationX, _initrotationY, _initrotationZ);
-
-            //renderer.ClearBuffer();
-
-            //foreach (var sceneObject in sceneObjects)
-            //{
-            //    // Вычисляем центроид фигуры
-            //    Vertex centroid = sceneObject.Polyhedron.Centroid(sceneObject.Polyhedron.LocalToWorld);
-
-            //    // Матрица перемещения в центр
-            //    Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y , -centroid.Z);
-
-            //    // Матрица преобразований (вращение, масштабирование и т.д.)
-            //    Matrix transformationMatrix = RotationMatrix(sceneObject.RotationX, sceneObject.RotationY,sceneObject.RotationZ) *
-            //                                  ScalingMatrix(sceneObject.ScaleX, sceneObject.ScaleY, sceneObject.RotationZ);
-
-            //    // Матрица возврата на место
-            //    Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-
-            //    // Матрица отдельного перемещения
-            //    Matrix translationMatrix = TranslationMatrix( sceneObject.TranslationX, sceneObject.TranslationY, sceneObject.TranslationZ);
-
-            //    // Финальная матрица преобразования
-            //    Matrix finalTransformationMatrix = toCenter * transformationMatrix * fromCenter * translationMatrix;
-
-            //    int q = 1;
-            //    // Рендерим все грани
-            //    foreach (var face in sceneObject.Polyhedron.Faces)
-            //    {
-
-
-            //        if (q == 1) renderer.RenderFace(face, finalTransformationMatrix, Pens.Yellow);
-            //        else if (q == 2) renderer.RenderFace(face, finalTransformationMatrix, Pens.Black);
-            //        else if (q == 3) renderer.RenderFace(face, finalTransformationMatrix, Pens.Azure);
-            //        else if (q == 4) renderer.RenderFace(face, finalTransformationMatrix, Pens.Red);
-            //        else if (q == 5) renderer.RenderFace(face, finalTransformationMatrix, Pens.Green);
-            //        else renderer.RenderFace(face, finalTransformationMatrix, Pens.Brown);
-            //        q++;
-            //        //renderer.RenderFace(face, transformationMatrix, Pens.Black);
-            //        //renderer.DrawToGraphics(e.Graphics);
-            //    }
-            //}
-
-            //renderer.DrawToGraphics(e.Graphics);
-
-
-
-
-            //renderer.ClearBuffer();
-
-            //Направление обзора
-            //var viewDirection = new Vertex(1, 0, -1);
-
-
-            ////END--------------------------- ZBUFFER
-
-
-            //Matrix translationMatrix = TranslationMatrix(_translationX, _translationY, _translationZ);
-            //Matrix scalingMatrix = ScalingMatrix(_scaleX, _scaleY, _scaleZ);
-            //Matrix rotationMatrix = RotationMatrix(_rotationX, _rotationY, _rotationZ);
-            //Matrix lrotation = LRotation(_fi, _l, _m, _n);
-            //Vertex centroid = _polyhedron.Centroid(_polyhedron.LocalToWorld);
-
-            //Matrix toCenter = TranslationMatrix(-centroid.X, -centroid.Y, -centroid.Z);
-            //Matrix fromCenter = TranslationMatrix(centroid.X, centroid.Y, centroid.Z);
-
-            //// Матрица преобразования (только поворот и масштабирование, без переноса)
-            //Matrix trasformationMatrixWithoutTranslation = RotationMatrix(_rotationX, _rotationX, _rotationZ) * ScalingMatrix(_scaleX, _scaleY, _scaleZ);
-            //Matrix worldMatrix;
-            //if (!IsCentroid)
-            //{
-            //    IsCentroid = true;
-            //    worldMatrix = translationMatrix * scalingMatrix * rotationMatrix * lrotation * _reflection;
-            //}
-            //else
-            //{
-            //    worldMatrix = toCenter * translationMatrix * scalingMatrix * rotationMatrix * lrotation * _reflection * fromCenter;
-            //}
-            //_polyhedron.LocalToWorld *= worldMatrix;
-
-            //int clientWidth = e.ClipRectangle.Width;
-            //int clientHeight = e.ClipRectangle.Height;
-
-            //int offsetX = clientWidth / 2;
-            //int offsetY = clientHeight / 2;
-
-            //centroid = _polyhedron.Centroid(_polyhedron.LocalToWorld);
-            //e.Graphics.FillRectangle(Brushes.Red, (int)centroid.X + offsetX, (int)centroid.Y + offsetY, 2, 2);
-
-            //var points2D = new List<Point>(10);
-
-            //// Выполняем отсечение
-            //Polyhedron visibleFaces = BackfaceCulling(_polyhedron, viewDirection, trasformationMatrixWithoutTranslation);
-            //foreach (Face face in visibleFaces.Faces)
-            //{
-            //    foreach (Vertex vertex in face.Vertices)
-            //    {
-            //        Vertex worldVertex = Transformer.TransformToWorld(vertex, _polyhedron.LocalToWorld * projectionFunction.getProjection(), projectionFunction);
-            //        if (worldMatrix == null) throw new InvalidOperationException("Матрица преобразования некорректна.");
-            //        points2D.Add(new Point((int)worldVertex.X, (int)worldVertex.Y));
-            //    }
-
-            //    var centeredPoints = points2D.Select(p => new Point(p.X + offsetX, p.Y + offsetY)).ToArray();
-            //    if (centeredPoints.Length > 0)
-            //    {
-            //        e.Graphics.DrawPolygon(Pens.Black, centeredPoints);
-            //    }
-            //    points2D.Clear();
-            //}
         }
 
 
         private Vertex CalculateRayDirection(int x, int y)
         {
             double fov = Math.PI / 4; // Угол обзора
-            double aspectRatio = (double)pictureBox1.Width / pictureBox1.Height;
+            double aspectRatio = (double)pictureBox1.Width / (double)pictureBox1.Height;
 
-            double px = (2 * ((x + 0.5) / pictureBox1.Width) - 1) * Math.Tan(fov / 2) * aspectRatio;
-            double py = (1 - 2 * ((y + 0.5) / pictureBox1.Height)) * Math.Tan(fov / 2);
+            double px = (2 * ((x + 0.5) / (double)pictureBox1.Width) - 1) * Math.Tan(fov / 2) * aspectRatio;
+            double py = (1 - 2 * ((y + 0.5) / (double)pictureBox1.Height)) * Math.Tan(fov / 2);
 
-            return new Vertex(px, py, -1).Normalize(); // Направление луча
+            Vertex dir = new Vertex(px, py, 1).Normalize();
+            //------Console.WriteLine($"Ray Direction3: ({dir.X}, {dir.Y}, {dir.Z})");
+
+            // Отладочный вывод для центрального пикселя
+             if (x == pictureBox1.Width / 2 && y == pictureBox1.Height / 2)
+            {
+                Console.WriteLine($"Central ray direction: ({dir.X}, {dir.Y}, {dir.Z})");
+            }
+
+            return dir; // Направление луча
+           
         }
         public bool IsCentroid { get; private set; }
 
@@ -687,37 +442,7 @@ namespace Lab8
             _polyhedron = f.LoadFromOBJ(file_name);
             _polyhedron2 = f.LoadFromOBJ(file_name2);
 
-            //sceneObjects = new List<SceneObject> {
-
-            //    new SceneObject
-            //    {
-            //        Polyhedron =  _polyhedron,
-            //        TranslationX = 0,
-            //        TranslationY = 0,
-            //        TranslationZ = 0,
-            //        RotationX = 0,
-            //        RotationY = 0,
-            //        RotationZ = 0,
-            //        ScaleX = 1,
-            //        ScaleY = 1,
-            //        ScaleZ = 1
-            //    },
-
-            //    new SceneObject
-            //    {
-            //        Polyhedron =  _polyhedron2,
-            //        TranslationX = 0,
-            //        TranslationY = 0,
-            //        TranslationZ = 0,
-            //        RotationX = 0,
-            //        RotationY = 0,
-            //        RotationZ = 0,
-            //        ScaleX = 1,
-            //        ScaleY = 1,
-            //        ScaleZ = 1
-            //    }
-
-            //};
+           
             pictureBox1.Invalidate();
         }
 
@@ -735,7 +460,7 @@ namespace Lab8
             _polyhedron2 = _polyhedron;
             pictureBox1.Invalidate();
             
-            //MessageBox.Show("asd");
+          
         }
 
         private void Save_Click(object sender, EventArgs e)
